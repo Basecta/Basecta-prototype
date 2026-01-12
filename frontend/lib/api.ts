@@ -25,9 +25,24 @@ export async function register(username: string, email: string, password: string
   });
 }
 
-export async function login(email: string, password: string) {  // Changed parameter from username to email
+export async function login(email: string, password: string) {
   return apiRequest('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const token = localStorage.getItem('token');
+  
+  return apiRequest('/api/auth/change-password', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
   });
 }
