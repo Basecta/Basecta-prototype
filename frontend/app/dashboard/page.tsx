@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Dot } from 'recharts';
@@ -84,118 +85,118 @@ export default function DashboardPage() {
   };
 
   const renderModal = () => {
-  if (!selectedCard) return null;
+    if (!selectedCard) return null;
 
-  let title = '';
-  let mainValue = '';
-  let chartData: any[] = [];
-  let dataKey = 'value';
-  let yAxisLabel = '';
+    let title = '';
+    let mainValue = '';
+    let chartData: any[] = [];
+    let dataKey = 'value';
+    let yAxisLabel = '';
 
-  switch (selectedCard) {
-    case 'biodiversity':
-      title = 'Biodiversity Credits';
-      mainValue = '1,247';
-      chartData = biodiversityData;
-      yAxisLabel = 'Credits';
-      break;
-    case 'income':
-      title = 'Income';
-      mainValue = '€2,450/month';
-      chartData = incomeData;
-      yAxisLabel = 'Income (€)';
-      break;
-    case 'reliability':
-      title = 'Reliability Score';
-      mainValue = `${gaugeValue}%`;
-      chartData = reliabilityData;
-      yAxisLabel = 'Score (%)';
-      break;
-  }
+    switch (selectedCard) {
+      case 'biodiversity':
+        title = 'Biodiversity Credits';
+        mainValue = '1,247';
+        chartData = biodiversityData;
+        yAxisLabel = 'Credits';
+        break;
+      case 'income':
+        title = 'Income';
+        mainValue = '€2,450/month';
+        chartData = incomeData;
+        yAxisLabel = 'Income (€)';
+        break;
+      case 'reliability':
+        title = 'Reliability Score';
+        mainValue = `${gaugeValue}%`;
+        chartData = reliabilityData;
+        yAxisLabel = 'Score (%)';
+        break;
+    }
 
-  return (
-    <>
-      {/* Backdrop with blur */}
-      <div
-        className="fixed inset-0 bg-black/20 backdrop-blur-md z-40"
-        onClick={() => setSelectedCard(null)}
-      ></div>
+    return (
+      <>
+        {/* Backdrop with blur */}
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-md z-40"
+          onClick={() => setSelectedCard(null)}
+        ></div>
 
-      {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
-        <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto pointer-events-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center p-6 border-b">
-            <h2 className="text-3xl font-bold text-gray-800">{title}</h2>
-            <button
-              onClick={() => setSelectedCard(null)}
-              className="text-gray-500 hover:text-gray-700 text-3xl"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6">
-            {/* Current Value */}
-            <div className="mb-8 text-center">
-              <p className="text-gray-600 text-lg mb-2">Current Value</p>
-              <p className="text-6xl font-bold" style={{ color: '#77E6B4' }}>
-                {mainValue}
-              </p>
+        {/* Modal */}
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto pointer-events-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-3xl font-bold text-gray-800">{title}</h2>
+              <button
+                onClick={() => setSelectedCard(null)}
+                className="text-gray-500 hover:text-gray-700 text-3xl"
+              >
+                ✕
+              </button>
             </div>
 
-            {/* Chart */}
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold text-gray-700 mb-4">Trend Analysis</h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="month" 
-                    label={{ value: 'Month', position: 'insideBottom', offset: -5 }}
-                  />
-                  <YAxis 
-                    label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip 
-                    formatter={(value: any, name: any, props: any) => {
-                      const label = props.payload.future ? `${value} (Projected)` : 
-                                   props.payload.current ? `${value} (Current)` : value;
-                      return [label, yAxisLabel];
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#77E6B4" 
-                    strokeWidth={3}
-                    dot={<CustomDot />}
-                    activeDot={{ r: 8 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              <div className="flex justify-center gap-6 mt-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-gray-300"></div>
-                  <span className="text-sm text-gray-600">Historical</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                  <span className="text-sm text-gray-600">Current Month</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-gray-300"></div>
-                  <span className="text-sm text-gray-600">Projected</span>
+            {/* Content */}
+            <div className="p-6">
+              {/* Current Value */}
+              <div className="mb-8 text-center">
+                <p className="text-gray-600 text-lg mb-2">Current Value</p>
+                <p className="text-6xl font-bold" style={{ color: '#77E6B4' }}>
+                  {mainValue}
+                </p>
+              </div>
+
+              {/* Chart */}
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold text-gray-700 mb-4">Trend Analysis</h3>
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="month" 
+                      label={{ value: 'Month', position: 'insideBottom', offset: -5 }}
+                    />
+                    <YAxis 
+                      label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip 
+                      formatter={(value: any, name: any, props: any) => {
+                        const label = props.payload.future ? `${value} (Projected)` : 
+                                     props.payload.current ? `${value} (Current)` : value;
+                        return [label, yAxisLabel];
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#77E6B4" 
+                      strokeWidth={3}
+                      dot={<CustomDot />}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+                <div className="flex justify-center gap-6 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-gray-300"></div>
+                    <span className="text-sm text-gray-600">Historical</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                    <span className="text-sm text-gray-600">Current Month</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-gray-300"></div>
+                    <span className="text-sm text-gray-600">Projected</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </>
-  );
-};
+      </>
+    );
+  };
 
   if (!user) {
     return (
@@ -208,7 +209,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <nav className="bg-white shadow-md">
-        <div className="w-full px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
           
           {/* Burger Menu */}
@@ -269,7 +270,8 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <div className="w-full px-4 py-8">
+      {/* Main Content with max-width container for white space */}
+      <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
             Welcome, {user.username}! 🎉
@@ -280,12 +282,21 @@ export default function DashboardPage() {
         </div>
 
         {/* Map Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6 h-[500px] flex items-center justify-center">
-          <h3 className="text-4xl font-bold text-gray-400">Map</h3>
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6 overflow-hidden">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">Farm Overview</h3>
+          <div className="relative w-full h-[450px] rounded-lg overflow-hidden">
+            <Image
+              src="/farm_map.png"
+              alt="Farm Map"
+              fill
+              className="object-cover rounded-lg"
+              priority
+            />
+          </div>
         </div>
 
         {/* Info Cards */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Biodiversity Credits */}
           <div 
             className="bg-white rounded-lg shadow-lg p-8 h-80 flex flex-col cursor-pointer hover:shadow-xl transition-shadow"
