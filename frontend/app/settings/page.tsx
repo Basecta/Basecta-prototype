@@ -96,15 +96,15 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <Link href="/dashboard" className="text-blue-500 hover:text-blue-700 mr-4">
-              ← Back to Dashboard
+        <div className="w-full px-4 py-4">
+            <div className="flex items-center justify-center relative">
+            <Link href="/dashboard" className="absolute left-0 text-blue-500 hover:text-blue-700">
+                ← Back to Dashboard
             </Link>
             <h1 className="text-2xl font-bold text-gray-800">Account Settings</h1>
-          </div>
+            </div>
         </div>
-      </nav>
+       </nav>
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         {/* Profile Information */}

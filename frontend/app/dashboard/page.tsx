@@ -243,6 +243,13 @@ export default function DashboardPage() {
                 {/* Menu Items */}
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 py-1">
                   <Link
+                    href="/data-upload"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Data Upload
+                  </Link>
+                  <Link
                     href="/settings"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                     onClick={() => setMenuOpen(false)}
