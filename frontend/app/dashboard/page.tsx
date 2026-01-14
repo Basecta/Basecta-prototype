@@ -2,20 +2,28 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { changePassword } from '@/lib/api';
+import Link from 'next/link';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const [gaugeValue, setGaugeValue] = useState(87);
+
+  const getGaugeColor = (value: number) => {
+    if (value >= 70) return '#77E6B4';
+    if (value >= 30) return '#FFD221';
+    return '#FF5353';
+  };
+
+  const getGaugeLabel = (value: number) => {
+    if (value >= 70) return 'Great!';
+    if (value >= 30) return 'Good';
+    return 'Fair';
+  };
 
   useEffect(() => {
     // Check if user is logged in
@@ -36,46 +44,6 @@ export default function DashboardPage() {
     router.push('/login');
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordForm({
-      ...passwordForm,
-      [e.target.name]: e.target.value,
-    });
-    setError('');
-    setSuccess('');
-  };
-
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
-      setSuccess('Password changed successfully!');
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      setTimeout(() => {
-        setShowChangePassword(false);
-        setSuccess('');
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to change password');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -87,18 +55,61 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="w-full px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-          >
-            Logout
-          </button>
+          
+          {/* Burger Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 rounded-md hover:bg-gray-200 hover:shadow-md transition-all cursor-pointer transform hover:scale-105"
+              aria-label="Menu"
+            >
+              <svg
+                className="w-6 h-6 text-gray-700"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {menuOpen && (
+              <>
+                {/* Backdrop to close menu when clicking outside */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setMenuOpen(false)}
+                ></div>
+                
+                {/* Menu Items */}
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 py-1">
+                  <Link
+                    href="/settings"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Account Settings
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
             Welcome, {user.username}! 🎉
@@ -106,118 +117,81 @@ export default function DashboardPage() {
           <p className="text-gray-600 text-lg">
             You're successfully logged in to your dashboard.
           </p>
-          <div className="mt-6 p-4 bg-blue-50 rounded-md">
-            <h3 className="font-semibold text-gray-700 mb-2">Your Account Info:</h3>
-            <p className="text-gray-600">Email: {user.email}</p>
-            <p className="text-gray-600">Username: {user.username}</p>
-          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-2xl font-bold text-gray-800">Account Settings</h3>
-            {!showChangePassword && (
-              <button
-                onClick={() => setShowChangePassword(true)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-              >
-                Change Password
-              </button>
-            )}
+        {/* Map Section */}
+        <div className="bg-white rounded-lg shadow-lg p-8 mb-6 h-[500px] flex items-center justify-center">
+          <h3 className="text-4xl font-bold text-gray-400">Map</h3>
+        </div>
+
+        {/* Info Cards */}
+        <div className="grid grid-cols-3 gap-6">
+          {/* Biodiversity Credits */}
+          <div className="bg-white rounded-lg shadow-lg p-8 h-80 flex flex-col">
+            <h3 className="text-2xl font-bold text-gray-400 mb-4">Biodiversity Credits</h3>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <span className="text-5xl font-bold text-green-500">1,247</span>
+                <svg 
+                  className="w-8 h-8 text-green-500" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth="3" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path d="M5 15l7-7 7 7"></path>
+                </svg>
+              </div>
+            </div>
           </div>
 
-          {showChangePassword && (
-            <div className="mt-4 p-6 bg-gray-50 rounded-md">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-xl font-semibold text-gray-700">Change Password</h4>
-                <button
-                  onClick={() => {
-                    setShowChangePassword(false);
-                    setError('');
-                    setSuccess('');
-                    setPasswordForm({
-                      currentPassword: '',
-                      newPassword: '',
-                      confirmPassword: '',
-                    });
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
+          {/* Income */}
+          <div className="bg-white rounded-lg shadow-lg p-8 h-80 flex flex-col">
+            <h3 className="text-2xl font-bold text-gray-400 mb-4">Income</h3>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <div className="flex items-baseline">
+                  <span className="text-5xl font-bold text-green-500">€2,450</span>
+                  <span className="text-xl text-gray-500 ml-1">/month</span>
+                </div>
+                <svg 
+                  className="w-8 h-8 text-green-500" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth="3" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
                 >
-                  ✕
-                </button>
+                  <path d="M5 15l7-7 7 7"></path>
+                </svg>
               </div>
-
-              {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                  {success}
-                </div>
-              )}
-
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    name="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    id="newPassword"
-                    name="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Must be at least 8 characters with uppercase, lowercase, number, and special character
-                  </p>
-                </div>
-
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm New Password
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Changing Password...' : 'Change Password'}
-                </button>
-              </form>
             </div>
-          )}
+          </div>
+
+          {/* Reliability Score */}
+          <div className="bg-white rounded-lg shadow-lg p-8 h-80 flex flex-col">
+            <h3 className="text-2xl font-bold text-gray-400 mb-4">Reliability Score</h3>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-48 h-48 relative">
+                <CircularProgressbar
+                  value={gaugeValue}
+                  strokeWidth={12}
+                  styles={buildStyles({
+                    pathColor: getGaugeColor(gaugeValue),
+                    trailColor: '#E5E7EB',
+                    strokeLinecap: 'round',
+                  })}
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold text-gray-400">{getGaugeLabel(gaugeValue)}</span>
+                  <span className="text-3xl font-bold text-gray-800">{gaugeValue}%</span>  
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
