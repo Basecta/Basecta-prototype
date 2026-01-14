@@ -131,9 +131,10 @@ export default function DashboardPage() {
             <h3 className="text-2xl font-bold text-gray-400 mb-4">Biodiversity Credits</h3>
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-3">
-                <span className="text-5xl font-bold text-green-500">1,247</span>
+                <span className="text-5xl font-bold" style={{ color: '#77E6B4' }}>1,247</span>
                 <svg 
-                  className="w-8 h-8 text-green-500" 
+                  className="w-8 h-8" 
+                  style={{ color: '#77E6B4' }}
                   fill="none" 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
@@ -153,11 +154,12 @@ export default function DashboardPage() {
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-3">
                 <div className="flex items-baseline">
-                  <span className="text-5xl font-bold text-green-500">€2,450</span>
+                  <span className="text-5xl font-bold" style={{ color: '#77E6B4' }}>€2,450</span>
                   <span className="text-xl text-gray-500 ml-1">/month</span>
                 </div>
                 <svg 
-                  className="w-8 h-8 text-green-500" 
+                  className="w-8 h-8" 
+                  style={{ color: '#77E6B4' }}
                   fill="none" 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
