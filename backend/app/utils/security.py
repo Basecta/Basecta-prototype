@@ -2,9 +2,14 @@ import bcrypt
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Optional
+import secrets
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # JWT Configuration
-SECRET_KEY = "your-secret-key-keep-it-secret"  # In production, use environment variable
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -35,3 +40,6 @@ def verify_token(token: str):
         return payload
     except JWTError:
         return None
+
+def generate_reset_token() -> str:
+    return secrets.token_urlsafe(32)

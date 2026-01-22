@@ -5,7 +5,7 @@ FastAPI backend for the Biodiversity Farm tracking application.
 ## Tech Stack
 
 - **Framework**: FastAPI
-- **Database**: SQLite (with SQLAlchemy ORM)
+- **Database**: PostgreSQL (with SQLAlchemy ORM)
 - **Authentication**: JWT tokens with bcrypt password hashing
 - **File Storage**: Local filesystem for CSV uploads
 - **Python Version**: 3.8+
@@ -14,20 +14,37 @@ FastAPI backend for the Biodiversity Farm tracking application.
 
 - Python 3.8 or higher
 - pip (Python package manager)
+- Docker and Docker Compose (for PostgreSQL)
 
 ## Installation & Setup
 
-### 1. Navigate to Backend Directory
+### 1. Start PostgreSQL Database
+
+From the project root directory:
+```bash
+docker-compose up -d
+```
+
+This will start PostgreSQL in a Docker container on port 5433.
+
+To stop the database:
+```bash
+docker-compose down
+```
+
+**Note**: The database uses port 5433 instead of the default 5432 to avoid conflicts with other PostgreSQL installations.
+
+### 2. Navigate to Backend Directory
 ```bash
 cd backend
 ```
 
-### 2. Create Virtual Environment
+### 3. Create Virtual Environment
 ```bash
 python -m venv venv
 ```
 
-### 3. Activate Virtual Environment
+### 4. Activate Virtual Environment
 
 **Windows (PowerShell):**
 ```powershell
@@ -44,9 +61,31 @@ venv\Scripts\activate.bat
 source venv/bin/activate
 ```
 
-### 4. Install Dependencies
+### 5. Install Dependencies
 ```bash
-pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] python-multipart email-validator
+pip install fastapi uvicorn sqlalchemy passlib[bcrypt] python-jose[cryptography] python-multipart email-validator psycopg2-binary python-dotenv
+```
+
+### 6. Environment Setup
+
+Copy the example environment file:
+```bash
+cp .env.example .env
+```
+
+The `.env.example` contains a development secret key and database URL that's safe to use locally.
+
+**⚠️ IMPORTANT**: In production, generate a new secret key:
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+And never commit production keys to the repository!
+
+Your `.env` file should look like:
+```env
+DATABASE_URL=postgresql://biodiversity_user:biodiversity_password@127.0.0.1:5433/biodiversity_db
+SECRET_KEY=dev_secret_key_change_in_production_xK9mP2wQ5rN8sL1tY4uZ7aB3cD6eF9gH
 ```
 
 ## Running the Backend
@@ -60,6 +99,8 @@ The backend will be available at:
 - **API**: http://localhost:8000
 - **API Documentation (Swagger)**: http://localhost:8000/docs
 - **Alternative API Docs (ReDoc)**: http://localhost:8000/redoc
+
+**Note**: Database tables are created automatically when you first start the backend.
 
 ### Server Options
 
@@ -97,9 +138,53 @@ backend/
 │   ├── waterways/
 │   └── soil/
 ├── venv/                    # Virtual environment (not in git)
-├── app.db                   # SQLite database (auto-created, not in git)
+├── .env                     # Environment variables (not in git)
+├── .env.example             # Environment template (in git)
 └── README.md
 ```
+
+## Database
+
+### PostgreSQL in Docker
+
+The project uses PostgreSQL running in Docker. Connection details:
+
+- **Host**: `127.0.0.1`
+- **Port**: `5433`
+- **Database**: `biodiversity_db`
+- **Username**: `biodiversity_user`
+- **Password**: `biodiversity_password`
+
+### Database Tables
+
+Currently includes:
+- **users**: User credentials and profile information
+
+Tables are created automatically when you first start the backend via SQLAlchemy's `Base.metadata.create_all()`.
+
+### Connecting to Database
+
+**Using psql:**
+```bash
+docker exec -it biodiversity_postgres psql -U biodiversity_user -d biodiversity_db
+```
+
+**Using DBeaver or pgAdmin:**
+- Host: `127.0.0.1`
+- Port: `5433`
+- Database: `biodiversity_db`
+- Username: `biodiversity_user`
+- Password: `biodiversity_password`
+
+### Resetting Database
+
+To completely reset the database:
+```bash
+docker-compose down -v
+docker-compose up -d
+```
+
+The `-v` flag removes the volume, giving you a fresh database. Tables will be recreated when you start the backend.
 
 ## API Endpoints
 
@@ -146,22 +231,7 @@ Files are automatically named with:
 
 Example: `5_20260116_143022_hedgerow_data.csv`
 
-## Database
-
-The SQLite database (`app.db`) is automatically created on first run. The database includes:
-
-- **Users table**: Stores user credentials and profile information
-
-To reset the database, simply delete `app.db` and restart the server.
-
-## Environment Variables (Future)
-
-Currently using hardcoded values. In production, create a `.env` file:
-```env
-SECRET_KEY=your-secret-key-here
-DATABASE_URL=sqlite:///./app.db
-UPLOAD_DIR=uploads
-```
+The `uploads/` directory is created automatically if it doesn't exist.
 
 ## Testing with Swagger UI
 
@@ -185,16 +255,44 @@ UPLOAD_DIR=uploads
 
 ## Common Issues
 
+### Database Connection Failed
+
+**Make sure Docker is running:**
+```bash
+docker ps
+```
+
+You should see `biodiversity_postgres` in the list.
+
+**If not, start it:**
+```bash
+docker-compose up -d
+```
+
+**Wait 10 seconds** for PostgreSQL to fully initialize before starting the backend.
+
 ### Port Already in Use
-If port 8000 is already in use:
+
+**Backend port (8000) in use:**
 ```bash
 uvicorn app.main:app --reload --port 8001
 ```
 
+**Database port (5433) in use:**
+Edit `docker-compose.yml` and change the port mapping:
+```yaml
+ports:
+  - "5433:5432"  # Change external port
+```
+
+Then update `DATABASE_URL` in `.env` to use the new port.
+
 ### Module Not Found Errors
+
 Make sure you're in the `backend` directory and the virtual environment is activated.
 
 ### CORS Errors
+
 The backend is configured to accept requests from `http://localhost:3000` (frontend). If your frontend runs on a different port, update `app/main.py`:
 ```python
 app.add_middleware(
@@ -205,16 +303,25 @@ app.add_middleware(
 ```
 
 ### File Upload Fails
+
 - Ensure the file is a CSV (`.csv` extension)
 - Check that you're authenticated (valid JWT token)
-- Verify the `uploads/` directory exists and has write permissions
+- The `uploads/` directory is created automatically
 - Check backend console for detailed error messages
 
 ### Token Expired
+
 JWT tokens expire after 30 minutes. If you get "Invalid token" errors:
 1. Log out
 2. Log back in to get a fresh token
 3. Try again
+
+### Environment Variables Not Loading
+
+Make sure:
+- `.env` file exists in the `backend/` directory
+- `python-dotenv` is installed
+- No syntax errors in `.env` (no quotes, no spaces around `=`)
 
 ## Development Notes
 
@@ -224,3 +331,5 @@ JWT tokens expire after 30 minutes. If you get "Invalid token" errors:
 - CSV files are validated by extension only (`.csv`)
 - Maximum file size is limited by FastAPI defaults (16MB)
 - Files are stored on local filesystem (not in database)
+- Database tables are created automatically via SQLAlchemy ORM
+- For production, use environment-specific secret keys and never commit them to Git
