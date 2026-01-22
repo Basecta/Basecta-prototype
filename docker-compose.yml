@@ -13,7 +13,52 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biodiversity_user -d biodiversity_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
+    networks:
+      - biodiversity-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: biodiversity_backend
+    environment:
+      DATABASE_URL: postgresql://biodiversity_user:biodiversity_password@postgres:5432/biodiversity_db
+      SECRET_KEY: dev_secret_key_change_in_production_xK9mP2wQ5rN8sL1tY4uZ7aB3cD6eF9gH
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - biodiversity-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: biodiversity_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - biodiversity-network
 
 volumes:
   postgres_data:
+
+networks:
+  biodiversity-network:
+    driver: bridge
