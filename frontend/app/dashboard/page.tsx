@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Dot } from 'recharts';
+import { RadialGauge } from '../components/RadialGauge';
+import { DetailView } from '../components/DetailView';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -14,6 +14,9 @@ export default function DashboardPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [gaugeValue, setGaugeValue] = useState(58);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [isReliabilityDetailOpen, setIsReliabilityDetailOpen] = useState(false);
+  const [isBiodiversityDetailOpen, setIsBiodiversityDetailOpen] = useState(false);
+  const [isIncomeDetailOpen, setIsIncomeDetailOpen] = useState(false);
 
   // Mock data for charts
   const biodiversityData = [
@@ -298,14 +301,14 @@ export default function DashboardPage() {
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Biodiversity Credits */}
-          <div 
+          <div
             className="bg-white rounded-lg shadow-lg p-8 h-80 flex flex-col cursor-pointer hover:shadow-xl transition-shadow"
-            onClick={() => setSelectedCard('biodiversity')}
+            onClick={() => setIsBiodiversityDetailOpen(true)}
           >
-            <h3 className="text-2xl font-bold text-gray-400 mb-4">Biodiversity Credits</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Biodiversity Credits</h3>
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-3">
-                <span className="text-5xl font-bold" style={{ color: '#77E6B4' }}>1,247</span>
+                <span className="text-4xl" style={{ color: '#050d0a' }}>1,247</span>
                 <svg 
                   className="w-8 h-8" 
                   style={{ color: '#77E6B4' }}
@@ -323,15 +326,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Income */}
-          <div 
+          <div
             className="bg-white rounded-lg shadow-lg p-8 h-80 flex flex-col cursor-pointer hover:shadow-xl transition-shadow"
-            onClick={() => setSelectedCard('income')}
+            onClick={() => setIsIncomeDetailOpen(true)}
           >
-            <h3 className="text-2xl font-bold text-gray-400 mb-4">Income</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Income</h3>
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-3">
                 <div className="flex items-baseline">
-                  <span className="text-5xl font-bold" style={{ color: '#77E6B4' }}>€2,450</span>
+                  <span className="text-4xl" style={{ color: '#030404' }}>€2,450</span>
                   <span className="text-xl text-gray-500 ml-1">/month</span>
                 </div>
                 <svg 
@@ -351,33 +354,62 @@ export default function DashboardPage() {
           </div>
 
           {/* Reliability Score */}
-          <div 
+          <div
             className="bg-white rounded-lg shadow-lg p-8 h-80 flex flex-col cursor-pointer hover:shadow-xl transition-shadow"
-            onClick={() => setSelectedCard('reliability')}
+            onClick={() => setIsReliabilityDetailOpen(true)}
           >
-            <h3 className="text-2xl font-bold text-gray-400 mb-4">Reliability Score</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Reliability Score</h3>
             <div className="flex-1 flex items-center justify-center">
-              <div className="w-48 h-48 relative">
-                <CircularProgressbar
-                  value={gaugeValue}
-                  strokeWidth={12}
-                  styles={buildStyles({
-                    pathColor: getGaugeColor(gaugeValue),
-                    trailColor: '#E5E7EB',
-                    strokeLinecap: 'round',
-                  })}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-400">{getGaugeLabel(gaugeValue)}</span>
-                  <span className="text-3xl font-bold text-gray-800">{gaugeValue}%</span>  
-                </div>
-              </div>
+              <RadialGauge
+                value={gaugeValue}
+                size={192}
+                strokeWidth={5}
+                symbol='%'
+              />
             </div>
           </div>
         </div>
 
         {/* Render Modal */}
         {renderModal()}
+
+        {/* Reliability Score Detail View */}
+        <DetailView
+          isOpen={isReliabilityDetailOpen}
+          onClose={() => setIsReliabilityDetailOpen(false)}
+          value={gaugeValue}
+          symbol='%'
+          targets={[
+            { label: 'Optimal', value: 70 },
+            { label: 'Good Threshold', value: 50 },
+            { label: 'Fair Threshold', value: 30 },
+          ]}
+        />
+
+        {/* Biodiversity Credits Detail View */}
+        <DetailView
+          isOpen={isBiodiversityDetailOpen}
+          onClose={() => setIsBiodiversityDetailOpen(false)}
+          value={1247}
+          targets={[
+            { label: 'Optimal', value: 70 },
+            { label: 'Good Threshold', value: 50 },
+            { label: 'Fair Threshold', value: 30 },
+          ]}
+        />
+
+        {/* Income Detail View */}
+        <DetailView
+          isOpen={isIncomeDetailOpen}
+          onClose={() => setIsIncomeDetailOpen(false)}
+          value={2450}
+          symbol='€'
+          targets={[
+            { label: 'Optimal', value: 70 },
+            { label: 'Good Threshold', value: 50 },
+            { label: 'Fair Threshold', value: 30 },
+          ]}
+        />
       </div>
     </div>
   );
