@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { uploadFile } from '@/lib/api';
+import { useData } from '@/lib/DataContext';
 
 type UploadStatus = 'idle' | 'uploading' | 'success' | 'error';
 
@@ -15,6 +16,7 @@ interface UploadState {
 
 export default function DataUploadPage() {
   const router = useRouter();
+  const { triggerCategoryUpload } = useData();
   const [user, setUser] = useState<any>(null);
   const [uploadStates, setUploadStates] = useState<{
     hedgerows: UploadState;
@@ -78,7 +80,10 @@ export default function DataUploadPage() {
 
     try {
       await uploadFile(file, category);
-      
+
+      // Trigger the data update for this specific category
+      triggerCategoryUpload(category);
+
       // Set success status
       setUploadStates(prev => ({
         ...prev,

@@ -7,44 +7,28 @@ import Image from 'next/image';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Dot } from 'recharts';
 import { RadialGauge } from '../components/RadialGauge';
 import { DetailView } from '../components/DetailView';
+import { useData } from '@/lib/DataContext';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { dashboardData } = useData();
   const [user, setUser] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [gaugeValue, setGaugeValue] = useState(58);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [isReliabilityDetailOpen, setIsReliabilityDetailOpen] = useState(false);
   const [isBiodiversityDetailOpen, setIsBiodiversityDetailOpen] = useState(false);
   const [isIncomeDetailOpen, setIsIncomeDetailOpen] = useState(false);
 
-  // Mock data for charts
-  const biodiversityData = [
-    { month: 'Aug', value: 1050 },
-    { month: 'Sep', value: 1120 },
-    { month: 'Oct', value: 1180 },
-    { month: 'Nov', value: 1247, current: true },
-    { month: 'Dec', value: 1310, future: true },
-    { month: 'Jan', value: 1380, future: true },
-  ];
-
-  const incomeData = [
-    { month: 'Aug', value: 2100 },
-    { month: 'Sep', value: 2250 },
-    { month: 'Oct', value: 2350 },
-    { month: 'Nov', value: 2450, current: true },
-    { month: 'Dec', value: 2580, future: true },
-    { month: 'Jan', value: 2700, future: true },
-  ];
-
-  const reliabilityData = [
-    { month: 'Aug', value: 52 },
-    { month: 'Sep', value: 55 },
-    { month: 'Oct', value: 56 },
-    { month: 'Nov', value: 58, current: true },
-    { month: 'Dec', value: 60, future: true },
-    { month: 'Jan', value: 62, future: true },
-  ];
+  // Get data from context
+  const {
+    biodiversityCredits,
+    income,
+    reliabilityScore: gaugeValue,
+    biodiversityData,
+    incomeData,
+    reliabilityData,
+    biodiversityDetailData,
+  } = dashboardData;
 
   useEffect(() => {
     // Check if user is logged in
@@ -99,13 +83,13 @@ export default function DashboardPage() {
     switch (selectedCard) {
       case 'biodiversity':
         title = 'Biodiversity Credits';
-        mainValue = '1,247';
+        mainValue = biodiversityCredits.toLocaleString();
         chartData = biodiversityData;
         yAxisLabel = 'Credits';
         break;
       case 'income':
         title = 'Income';
-        mainValue = '€2,450/month';
+        mainValue = `€${income.toLocaleString()}/month`;
         chartData = incomeData;
         yAxisLabel = 'Income (€)';
         break;
@@ -308,7 +292,7 @@ export default function DashboardPage() {
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Biodiversity Credits</h3>
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-3">
-                <span className="text-4xl" style={{ color: '#050d0a' }}>1,247</span>
+                <span className="text-4xl" style={{ color: '#050d0a' }}>{biodiversityCredits.toLocaleString()}</span>
                 <svg 
                   className="w-8 h-8" 
                   style={{ color: '#77E6B4' }}
@@ -334,7 +318,7 @@ export default function DashboardPage() {
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-3">
                 <div className="flex items-baseline">
-                  <span className="text-4xl" style={{ color: '#030404' }}>€2,450</span>
+                  <span className="text-4xl" style={{ color: '#030404' }}>€{income.toLocaleString()}</span>
                   <span className="text-xl text-gray-500 ml-1">/month</span>
                 </div>
                 <svg 
@@ -392,34 +376,26 @@ export default function DashboardPage() {
         <DetailView
           isOpen={isBiodiversityDetailOpen}
           onClose={() => setIsBiodiversityDetailOpen(false)}
-          value={1247}
+          value={biodiversityCredits}
           type='biodiversity'
           dummy={false}
           showGauge={false}
-          data={{
-            trendData: [1000, 1050, 1100, 1120, 1180, 1200, 1220, 1247, 1280, 1300, 1320, 1350],
-            peakValue: 1350,
-            avgValue: 1180,
-            peakLabel: 'Peak Credits (30d)',
-            avgLabel: 'Average Credits',
-            peakTrend: 15,
-            avgTrend: -12,
-          }}
+          data={biodiversityDetailData}
         />
 
         {/* Income Detail View */}
         <DetailView
           isOpen={isIncomeDetailOpen}
           onClose={() => setIsIncomeDetailOpen(false)}
-          value={2450}
+          value={income}
           symbol='€'
           type='income'
           dummy={true}
           showGauge={false}
           targets={[
-            { label: 'Target', value: 3000 },
-            { label: 'Good Threshold', value: 2000 },
-            { label: 'Minimum', value: 1000 },
+            { label: 'Target', value: 4000 },
+            { label: 'Good Threshold', value: 2500 },
+            { label: 'Minimum', value: 1500 },
           ]}
         />
       </div>
