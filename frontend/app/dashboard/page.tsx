@@ -379,6 +379,8 @@ export default function DashboardPage() {
           onClose={() => setIsReliabilityDetailOpen(false)}
           value={gaugeValue}
           symbol='%'
+          type='reliability'
+          dummy={true}
           targets={[
             { label: 'Optimal', value: 70 },
             { label: 'Good Threshold', value: 50 },
@@ -391,11 +393,18 @@ export default function DashboardPage() {
           isOpen={isBiodiversityDetailOpen}
           onClose={() => setIsBiodiversityDetailOpen(false)}
           value={1247}
-          targets={[
-            { label: 'Optimal', value: 70 },
-            { label: 'Good Threshold', value: 50 },
-            { label: 'Fair Threshold', value: 30 },
-          ]}
+          type='biodiversity'
+          dummy={false}
+          showGauge={false}
+          data={{
+            trendData: [1000, 1050, 1100, 1120, 1180, 1200, 1220, 1247, 1280, 1300, 1320, 1350],
+            peakValue: 1350,
+            avgValue: 1180,
+            peakLabel: 'Peak Credits (30d)',
+            avgLabel: 'Average Credits',
+            peakTrend: 15,
+            avgTrend: -12,
+          }}
         />
 
         {/* Income Detail View */}
@@ -404,10 +413,13 @@ export default function DashboardPage() {
           onClose={() => setIsIncomeDetailOpen(false)}
           value={2450}
           symbol='€'
+          type='income'
+          dummy={true}
+          showGauge={false}
           targets={[
-            { label: 'Optimal', value: 70 },
-            { label: 'Good Threshold', value: 50 },
-            { label: 'Fair Threshold', value: 30 },
+            { label: 'Target', value: 3000 },
+            { label: 'Good Threshold', value: 2000 },
+            { label: 'Minimum', value: 1000 },
           ]}
         />
       </div>
