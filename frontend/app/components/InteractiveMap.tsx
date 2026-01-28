@@ -33,15 +33,22 @@ export default function InteractiveMap({
 
   useEffect(() => {
     // Prevent double initialization
-    if (!mapContainerRef.current || initializedRef.current) return;
+    if (!mapContainerRef.current) return;
 
     const container = mapContainerRef.current;
 
     // Check if Leaflet already initialized on this container
     if ((container as any)._leaflet_id) {
-      return;
+      // Clean up existing map first
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      // Clear the leaflet id from the container
+      delete (container as any)._leaflet_id;
     }
 
+    if (initializedRef.current) return;
     initializedRef.current = true;
 
     const initMap = async () => {
@@ -64,6 +71,11 @@ export default function InteractiveMap({
           [bounds.south, bounds.west],
           [bounds.north, bounds.east],
         ];
+
+        // Double-check container is still valid and not already initialized
+        if (!mapContainerRef.current || (mapContainerRef.current as any)._leaflet_id) {
+          return;
+        }
 
         // Initialize map centered on the image bounds
         const map = L.map(container, {
@@ -112,6 +124,10 @@ export default function InteractiveMap({
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+      }
+      // Clear the leaflet id from the container to allow re-initialization
+      if (mapContainerRef.current) {
+        delete (mapContainerRef.current as any)._leaflet_id;
       }
       initializedRef.current = false;
     };

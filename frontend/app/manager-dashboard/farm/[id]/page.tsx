@@ -616,9 +616,13 @@ export default function FarmDetailsPage() {
           onClose={() => setIsBiodiversityDetailOpen(false)}
           value={biodiversityCredits}
           type='biodiversity'
-          dummy={false}
+          dummy={true}
           showGauge={false}
-          data={biodiversityDetailData}
+          targets={[
+            { label: 'Target', value: 2500 },
+            { label: 'Good Threshold', value: 1500 },
+            { label: 'Minimum', value: 1000 },
+          ]}
         />
 
         {/* Income Detail View */}
