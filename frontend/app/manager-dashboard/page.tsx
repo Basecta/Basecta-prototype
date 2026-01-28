@@ -331,37 +331,8 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
-        {/* Row 2: Avg Biodiversity Graph | Avg Reliability Graph */}
+        {/* Row 2: Avg Reliability Graph | Avg Biodiversity Graph */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Average Biodiversity Graph */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Average Biodiversity Credits</h3>
-              <span className="text-2xl font-bold text-emerald-600">{avgBiodiversity.toLocaleString()}</span>
-            </div>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={avgBiodiversityData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                    formatter={(value: number) => [value.toLocaleString(), 'Credits']}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#10B981"
-                    strokeWidth={2}
-                    dot={{ fill: '#10B981', strokeWidth: 2, r: 3 }}
-                    activeDot={{ r: 5 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
           {/* Average Reliability Graph */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex justify-between items-center mb-4">
@@ -384,6 +355,35 @@ export default function ManagerDashboard() {
                     stroke="#14B8A6"
                     strokeWidth={2}
                     dot={{ fill: '#14B8A6', strokeWidth: 2, r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Average Biodiversity Graph */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Average Biodiversity Credits</h3>
+              <span className="text-2xl font-bold text-emerald-600">{avgBiodiversity.toLocaleString()}</span>
+            </div>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={avgBiodiversityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                    formatter={(value: number) => [value.toLocaleString(), 'Credits']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    dot={{ fill: '#10B981', strokeWidth: 2, r: 3 }}
                     activeDot={{ r: 5 }}
                   />
                 </LineChart>
