@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Dot } from 'recharts';
+import MapWrapper from '../components/MapWrapper';
 import { RadialGauge } from '../components/RadialGauge';
 import { DetailView } from '../components/DetailView';
 import { useData } from '@/lib/DataContext';
@@ -272,12 +272,10 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6 overflow-hidden">
           <h3 className="text-xl font-semibold text-gray-700 mb-4">Farm Overview</h3>
           <div className="relative w-full h-[450px] rounded-lg overflow-hidden">
-            <Image
-              src="/farm_map.png"
-              alt="Farm Map"
-              fill
-              className="object-cover rounded-lg"
-              priority
+            <MapWrapper
+              imageUrl="/farm-orthophoto.png"
+              boundsUrl="/farm-orthophoto-bounds.json"
+              className="w-full h-full"
             />
           </div>
         </div>
