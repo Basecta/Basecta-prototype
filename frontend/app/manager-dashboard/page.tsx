@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface User {
   username: string;
@@ -159,9 +160,65 @@ const managedFarms: Farm[] = [
   },
 ];
 
+// Generate monthly trend data for averages
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const generateAvgBiodiversityData = () => {
+  const avgCredits = managedFarms.reduce((sum, f) => sum + f.biodiversityCredits, 0) / managedFarms.length;
+  return months.map((month, index) => {
+    const trendFactor = 0.85 + (index / 12) * 0.2;
+    const variance = 1 + (Math.sin(index * 0.8) * 0.08);
+    return {
+      month,
+      value: Math.round(avgCredits * trendFactor * variance),
+    };
+  });
+};
+
+const generateAvgReliabilityData = () => {
+  const avgReliability = managedFarms.reduce((sum, f) => sum + f.reliabilityScore, 0) / managedFarms.length;
+  return months.map((month, index) => {
+    const trendFactor = 0.9 + (index / 12) * 0.15;
+    const variance = 1 + (Math.cos(index * 0.6) * 0.05);
+    return {
+      month,
+      value: Math.round(avgReliability * trendFactor * variance),
+    };
+  });
+};
+
+const generateTotalIncomeData = () => {
+  const totalIncome = managedFarms.reduce((sum, f) => sum + f.income, 0);
+  return months.map((month, index) => {
+    const trendFactor = 0.88 + (index / 12) * 0.18;
+    const variance = 1 + (Math.sin(index * 0.7) * 0.06);
+    return {
+      month,
+      value: Math.round(totalIncome * trendFactor * variance),
+    };
+  });
+};
+
 export default function ManagerDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+
+  // Calculate aggregated data
+  const totalCredits = useMemo(() =>
+    managedFarms.reduce((sum, farm) => sum + farm.biodiversityCredits, 0), []);
+
+  const totalRevenue = useMemo(() =>
+    managedFarms.reduce((sum, farm) => sum + farm.income, 0), []);
+
+  const avgBiodiversity = useMemo(() =>
+    Math.round(totalCredits / managedFarms.length), [totalCredits]);
+
+  const avgReliability = useMemo(() =>
+    Math.round(managedFarms.reduce((sum, farm) => sum + farm.reliabilityScore, 0) / managedFarms.length), []);
+
+  const avgBiodiversityData = useMemo(() => generateAvgBiodiversityData(), []);
+  const avgReliabilityData = useMemo(() => generateAvgReliabilityData(), []);
+  const totalIncomeData = useMemo(() => generateTotalIncomeData(), []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -239,8 +296,8 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Row 1: Top 5 Reliable Farms | Total Credits */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Top 5 Reliable Farms */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Top 5 Reliable Farms</h3>
@@ -267,18 +324,107 @@ export default function ManagerDashboard() {
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Total Biodiversity Credits</h3>
             <div className="flex flex-col items-center justify-center h-[calc(100%-2rem)]">
               <span className="text-5xl font-bold text-emerald-600">
-                {managedFarms.reduce((sum, farm) => sum + farm.biodiversityCredits, 0).toLocaleString()}
+                {totalCredits.toLocaleString()}
               </span>
               <span className="text-gray-500 mt-2">credits across {managedFarms.length} farms</span>
             </div>
           </div>
         </div>
 
+        {/* Row 2: Avg Biodiversity Graph | Avg Reliability Graph */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Average Biodiversity Graph */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Average Biodiversity Credits</h3>
+              <span className="text-2xl font-bold text-emerald-600">{avgBiodiversity.toLocaleString()}</span>
+            </div>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={avgBiodiversityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                    formatter={(value: number) => [value.toLocaleString(), 'Credits']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    dot={{ fill: '#10B981', strokeWidth: 2, r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Average Reliability Graph */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Average Reliability Score</h3>
+              <span className="text-2xl font-bold text-emerald-600">{avgReliability}%</span>
+            </div>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={avgReliabilityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" domain={[0, 100]} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                    formatter={(value: number) => [`${value}%`, 'Reliability']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#14B8A6"
+                    strokeWidth={2}
+                    dot={{ fill: '#14B8A6', strokeWidth: 2, r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Total Revenue from Credits Sold */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2 text-center">Total Revenue from Credits Sold</h3>
+          <div className="flex items-center justify-center gap-4">
+            <span className="text-4xl font-bold text-emerald-600">€{totalRevenue.toLocaleString()}</span>
+            <span className="text-gray-500">/month across {managedFarms.length} farms</span>
+          </div>
+        </div>
+
+        {/* Row 4: Total Income Per Month Graph */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Total Income Per Month</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={totalIncomeData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  formatter={(value: number) => [`€${value.toLocaleString()}`, 'Income']}
+                />
+                <Bar dataKey="value" fill="#10B981" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         {/* Managed Farms Section */}
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-6">Managed Farms</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-6">Managed Farms ({managedFarms.length})</h3>
 
-          <div className="space-y-4">
+          <div className={`space-y-4 ${managedFarms.length > 5 ? 'max-h-[600px] overflow-y-auto pr-2' : ''}`}>
             {managedFarms.map((farm) => (
               <Link
                 key={farm.id}
