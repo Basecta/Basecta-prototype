@@ -10,19 +10,27 @@ export default function Home() {
         <p className="text-xl text-gray-600 mb-8">
           Frontend is up and running! 🚀
         </p>
-        <div className="flex gap-4 justify-center">
+        <div className="flex flex-col gap-4 items-center">
           <Link
             href="/register"
             className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-colors"
           >
             Get Started
           </Link>
-          <Link
-            href="/login"
-            className="px-6 py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition-colors"
-          >
-            Login
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/login"
+              className="px-6 py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition-colors"
+            >
+              User Login
+            </Link>
+            <Link
+              href="/manager-login"
+              className="px-6 py-3 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition-colors"
+            >
+              Manager Login
+            </Link>
+          </div>
         </div>
       </div>
     </div>
