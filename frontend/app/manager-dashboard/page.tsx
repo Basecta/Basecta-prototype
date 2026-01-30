@@ -347,7 +347,7 @@ export default function ManagerDashboard() {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" domain={[0, 100]} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                    formatter={(value: number) => [`${value}%`, 'Reliability']}
+                    formatter={(value) => [`${value}%`, 'Reliability']}
                   />
                   <Line
                     type="monotone"
@@ -376,7 +376,7 @@ export default function ManagerDashboard() {
                   <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                    formatter={(value: number) => [value.toLocaleString(), 'Credits']}
+                    formatter={(value) => [Number(value).toLocaleString(), 'Credits']}
                   />
                   <Line
                     type="monotone"
@@ -412,7 +412,7 @@ export default function ManagerDashboard() {
                 <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                  formatter={(value: number) => [`€${value.toLocaleString()}`, 'Income']}
+                  formatter={(value) => [`€${Number(value).toLocaleString()}`, 'Income']}
                 />
                 <Bar dataKey="value" fill="#10B981" radius={[4, 4, 0, 0]} />
               </BarChart>
