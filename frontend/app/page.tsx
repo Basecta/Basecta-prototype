@@ -7,9 +7,6 @@ export default function Home() {
         <h1 className="text-6xl font-bold text-gray-800 mb-4">
           Welcome to the Project
         </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Frontend is up and running! 🚀
-        </p>
         <div className="flex flex-col gap-4 items-center">
           <Link
             href="/register"
