@@ -261,7 +261,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            Welcome, {user.username}! 🎉
+            Welcome, {user.username}!
           </h2>
           <p className="text-gray-600 text-lg">
             You're successfully logged in to your dashboard.
