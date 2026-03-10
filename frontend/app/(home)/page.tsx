@@ -14,20 +14,12 @@ export default function Home() {
           >
             Get Started
           </Link>
-          <div className="flex gap-4">
-            <Link
-              href="/login"
-              className="px-6 py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition-colors"
-            >
-              User Login
-            </Link>
-            <Link
-              href="/manager-login"
-              className="px-6 py-3 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition-colors"
-            >
-              Manager Login
-            </Link>
-          </div>
+          <Link
+            href="/login"
+            className="px-6 py-3 bg-indigo-500 text-white rounded-lg shadow-lg hover:bg-indigo-600 transition-colors"
+          >
+            Login
+          </Link>
         </div>
       </div>
     </div>

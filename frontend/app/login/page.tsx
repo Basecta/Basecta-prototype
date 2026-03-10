@@ -4,21 +4,38 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login } from '@/lib/api';
+import { SegmentedControl } from '../components/SegmentedControl';
+import { FormInput } from '../components/FormInput';
+import { AlertMessage } from '../components/AlertMessage';
+
+type UserRole = 'asset_owner' | 'manager' | 'investor';
+
+const ROLE_OPTIONS = [
+  { value: 'asset_owner', label: 'Asset Owner' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'investor', label: 'Investor' },
+];
+
+const ROLE_REDIRECT: Record<UserRole, string> = {
+  asset_owner: '/dashboard',
+  manager: '/manager-dashboard',
+  investor: '/investor-dashboard',
+};
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: '',  // Changed from username to email
-    password: '',
-  });
+  const [role, setRole] = useState<UserRole>('asset_owner');
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
+  };
+
+  const handleRoleChange = (value: string) => {
+    setRole(value as UserRole);
     setError('');
   };
 
@@ -28,14 +45,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await login(formData.email, formData.password);  // Changed from username to email
-      
-      // Store token and user info
+      const data = await login(formData.email, formData.password);
       localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      // Redirect to dashboard
-      router.push('/dashboard');
+      localStorage.setItem('user', JSON.stringify({ ...data.user, role }));
+      router.push(ROLE_REDIRECT[role]);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
@@ -43,64 +56,53 @@ export default function LoginPage() {
     }
   };
 
+  const activeLabel = ROLE_OPTIONS.find((o) => o.value === role)?.label ?? '';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Welcome Back
-        </h1>
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">Welcome Back</h1>
+        <p className="text-center text-gray-500 text-sm mb-6">Select your role to continue</p>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        <div className="mb-6">
+          <SegmentedControl options={ROLE_OPTIONS} value={role} onChange={handleRoleChange} />
+        </div>
+
+        {error && <div className="mb-4"><AlertMessage type="error" message={error} /></div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-              placeholder="Enter email"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-              placeholder="Enter password"
-            />
-          </div>
-
+          <FormInput
+            label="Email"
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            placeholder="Enter email"
+          />
+          <FormInput
+            label="Password"
+            id="password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            placeholder="Enter password"
+          />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Logging in...' : `Login as ${activeLabel}`}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-600 mt-4">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-blue-500 hover:underline">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-indigo-500 hover:underline">
             Register here
           </Link>
         </p>
