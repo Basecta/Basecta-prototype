@@ -1,10 +1,10 @@
 "use client"
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { ManagerSidebar } from "@/components/manager-sidebar"
+import { InvestorSidebar } from "@/components/investor-sidebar"
 import { SiteHeader } from "@/components/site-header"
 
-export default function ManagerDashboardLayout({
+export default function InvestorDashboardLayout({
   children,
 }: {
   children: React.ReactNode
@@ -19,7 +19,7 @@ export default function ManagerDashboardLayout({
       }
     >
       <SiteHeader />
-      <ManagerSidebar variant="inset" />
+      <InvestorSidebar variant="inset" />
       <SidebarInset className="pt-(--header-height)">
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">

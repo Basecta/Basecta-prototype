@@ -79,7 +79,7 @@ export function Navbar({ title, backHref, menuItems }: NavbarProps) {
                       <button
                         key={i}
                         onClick={() => { item.onClick?.(); setMenuOpen(false); }}
-                        className={`w-full text-left px-4 py-2 transition-colors hover:bg-gray-100 ${
+                        className={`w-full text-left px-4 py-2 transition-colors hover:bg-gray-100 cursor-pointer ${
                           item.danger ? 'text-red-600' : 'text-gray-700'
                         }`}
                       >

@@ -172,7 +172,7 @@ export function DetailView({ isOpen, onClose, value, symbol, targets, type = 're
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900 cursor-pointer"
                   aria-label="Close details"
                 >
                   <X className="w-5 h-5" />

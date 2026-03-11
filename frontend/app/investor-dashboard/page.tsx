@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Navbar } from '../components/Navbar';
-import { PageLayout } from '../components/PageLayout';
 import { LoadingScreen } from '../components/LoadingScreen';
 
 export default function InvestorDashboard() {
@@ -28,23 +26,11 @@ export default function InvestorDashboard() {
     setUser(parsedUser);
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/');
-  };
-
   if (!user) return <LoadingScreen />;
 
   return (
-    <PageLayout>
-      <Navbar
-        title="Investor Dashboard"
-        menuItems={[{ label: 'Logout', onClick: handleLogout, danger: true }]}
-      />
-      <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-        <p className="text-gray-400 text-lg">Coming soon</p>
-      </div>
-    </PageLayout>
+    <div className="flex items-center justify-center min-h-[calc(100svh-var(--header-height,0px))]">
+      <p className="text-muted-foreground text-lg">Coming soon</p>
+    </div>
   );
 }

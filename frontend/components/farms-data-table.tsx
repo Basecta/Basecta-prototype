@@ -55,11 +55,11 @@ export function FarmsDataTable({ farms }: FarmsDataTableProps) {
           </TableHeader>
           <TableBody>
             {farms.map((farm) => (
-              <TableRow key={farm.id} className="group">
+              <TableRow key={farm.id} className="group cursor-pointer">
                 <TableCell>
                   <Link
                     href={`/manager-dashboard/farm/${farm.id}`}
-                    className="font-medium hover:underline"
+                    className="font-medium hover:underline cursor-pointer"
                   >
                     {farm.name}
                   </Link>
@@ -85,7 +85,7 @@ export function FarmsDataTable({ farms }: FarmsDataTableProps) {
                 <TableCell>
                   <Link
                     href={`/manager-dashboard/farm/${farm.id}`}
-                    className="text-muted-foreground group-hover:text-foreground"
+                    className="text-muted-foreground group-hover:text-foreground cursor-pointer"
                   >
                     <ChevronRightIcon className="size-4" />
                   </Link>

@@ -12,10 +12,10 @@ export function SegmentedControl({ options, value, onChange }: SegmentedControlP
           key={option.value}
           type="button"
           onClick={() => onChange(option.value)}
-          className={`flex-1 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
+          className={`flex-1 py-2 text-sm font-medium rounded-full transition-all duration-200 cursor-pointer ${
             value === option.value
               ? 'bg-indigo-500 text-white shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-gray-500 hover:bg-white/60 hover:text-gray-700'
           }`}
         >
           {option.label}
