@@ -15,11 +15,11 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/nav-user"
-import { LayoutDashboardIcon, UploadIcon, SettingsIcon, LeafIcon, Flower2Icon, Flower, Flower2 } from "lucide-react"
+import { LayoutDashboardIcon, LandPlotIcon, SettingsIcon, LeafIcon, Flower } from "lucide-react"
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
-  { title: "Assets", url: "/data-upload", icon: UploadIcon },
+  { title: "Assets", url: "/data-upload", icon: LandPlotIcon },
   { title: "Nature Credits", url: "/credits", icon: Flower },
   { title: "Settings", url: "/settings", icon: SettingsIcon },
 ]
