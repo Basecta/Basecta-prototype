@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { changePassword } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SunIcon, MoonIcon } from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [user, setUser] = useState<any>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -116,6 +119,39 @@ export default function SettingsPage() {
             <p className="text-lg">
               {new Date(user.created_at).toLocaleDateString()}
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Label className="text-muted-foreground">Theme</Label>
+          <div className="flex gap-3 mt-2">
+            <button
+              onClick={() => setTheme('light')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
+                theme === 'light'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border hover:bg-accent'
+              }`}
+            >
+              <SunIcon className="size-4" />
+              Light
+            </button>
+            <button
+              onClick={() => setTheme('dark')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
+                theme === 'dark'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border hover:bg-accent'
+              }`}
+            >
+              <MoonIcon className="size-4" />
+              Dark
+            </button>
           </div>
         </CardContent>
       </Card>
