@@ -7,7 +7,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -15,7 +14,7 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/nav-user"
-import { LayoutDashboardIcon, UploadIcon, SettingsIcon, LeafIcon, Flower2Icon, Flower, Flower2 } from "lucide-react"
+import { LayoutDashboardIcon, UploadIcon, SettingsIcon, Flower } from "lucide-react"
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
@@ -43,19 +42,6 @@ export function UserSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-              render={<Link href="/dashboard" />}
-            >
-              <LeafIcon className="size-5!" />
-              <span className="text-base font-semibold">BioCredits</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
