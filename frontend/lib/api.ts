@@ -47,6 +47,16 @@ export async function changePassword(currentPassword: string, newPassword: strin
   });
 }
 
+export async function submitSurvey(responses: Record<string, unknown>, token: string) {
+  return apiRequest('/api/survey/submit', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ responses }),
+  });
+}
+
 export async function uploadFile(file: File, category: string) {
   const token = localStorage.getItem('token');
   
