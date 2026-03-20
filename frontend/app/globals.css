@@ -158,3 +158,46 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+/* Slider thumb digit animations — pure translate, no opacity, clean strip slide */
+/* Increasing (drag right): old exits right, new enters from left */
+@keyframes digitOutRight {
+  from { transform: translateX(0);    }
+  to   { transform: translateX(100%); }
+}
+@keyframes digitInFromLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0);     }
+}
+/* Decreasing (drag left): old exits left, new enters from right */
+@keyframes digitOutLeft {
+  from { transform: translateX(0);     }
+  to   { transform: translateX(-100%); }
+}
+@keyframes digitInFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0);    }
+}
+.digit-out-right    { animation: digitOutRight    180ms ease-in-out forwards; }
+.digit-in-from-left { animation: digitInFromLeft  180ms ease-in-out forwards; }
+.digit-out-left     { animation: digitOutLeft     180ms ease-in-out forwards; }
+.digit-in-from-right{ animation: digitInFromRight 180ms ease-in-out forwards; }
+
+/* Survey scrollbar */
+.survey-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4338ca transparent;
+}
+.survey-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.survey-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.survey-scroll::-webkit-scrollbar-thumb {
+  background: #4338ca;
+  border-radius: 999px;
+}
+.survey-scroll::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5;
+}
