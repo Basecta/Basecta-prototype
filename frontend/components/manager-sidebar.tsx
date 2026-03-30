@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   Sidebar,
@@ -16,20 +16,27 @@ import {
 import { NavUser } from "@/components/nav-user"
 import { LayoutDashboardIcon } from "lucide-react"
 
-const navItems = [
-  { title: "Dashboard", url: "/manager-dashboard", icon: LayoutDashboardIcon },
-]
-
 export function ManagerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
+  const pathname = usePathname()
   const [user, setUser] = useState<{ username: string; email: string } | null>(null)
+  const [dashboardHref, setDashboardHref] = useState('/manager-dashboard')
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
+    if (userData) setUser(JSON.parse(userData))
   }, [])
+
+  useEffect(() => {
+    const match = pathname.match(/^\/manager-dashboard\/([^/]+)$/)
+    if (match) {
+      localStorage.setItem('currentManagerDashboardId', match[1])
+      setDashboardHref(`/manager-dashboard/${match[1]}`)
+    } else {
+      const savedId = localStorage.getItem('currentManagerDashboardId')
+      if (savedId) setDashboardHref(`/manager-dashboard/${savedId}`)
+    }
+  }, [pathname])
 
   const handleLogout = () => {
     localStorage.removeItem("token")
@@ -43,14 +50,12 @@ export function ManagerSidebar({ ...props }: React.ComponentProps<typeof Sidebar
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton tooltip={item.title} render={<Link href={item.url} />}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Dashboard" render={<Link href={dashboardHref} />}>
+                  <LayoutDashboardIcon />
+                  <span>Dashboard</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

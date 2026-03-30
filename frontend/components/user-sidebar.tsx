@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   Sidebar,
@@ -14,25 +14,34 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/nav-user"
-import { LayoutDashboardIcon, UploadIcon, SettingsIcon, Flower } from "lucide-react"
+import { LayoutDashboardIcon, UploadIcon, Flower } from "lucide-react"
 
-const navItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
+const staticNavItems = [
   { title: "Assets", url: "/data-upload", icon: UploadIcon },
   { title: "Nature Credits", url: "/credits", icon: Flower },
-  { title: "Settings", url: "/settings", icon: SettingsIcon },
 ]
 
 export function UserSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
+  const pathname = usePathname()
   const [user, setUser] = useState<{ username: string; email: string } | null>(null)
+  const [dashboardHref, setDashboardHref] = useState('/dashboard')
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
+    if (userData) setUser(JSON.parse(userData))
   }, [])
+
+  useEffect(() => {
+    const match = pathname.match(/^\/dashboard\/([^/]+)$/)
+    if (match) {
+      localStorage.setItem('currentFarmDashboardId', match[1])
+      setDashboardHref(`/dashboard/${match[1]}`)
+    } else {
+      const savedId = localStorage.getItem('currentFarmDashboardId')
+      if (savedId) setDashboardHref(`/dashboard/${savedId}`)
+    }
+  }, [pathname])
 
   const handleLogout = () => {
     localStorage.removeItem("token")
@@ -46,7 +55,13 @@ export function UserSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Dashboard" render={<Link href={dashboardHref} />}>
+                  <LayoutDashboardIcon />
+                  <span>Dashboard</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {staticNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton tooltip={item.title} render={<Link href={item.url} />}>
                     <item.icon />

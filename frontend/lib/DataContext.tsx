@@ -1,8 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
 
-// Define the data structure types
 interface MonthlyDataPoint {
   month: string;
   value: number;
@@ -24,7 +23,7 @@ interface DashboardData {
   biodiversityCredits: number;
   income: number;
   reliabilityScore: number;
-  biodiversityData: MonthlyDataPoint[];
+  natureData: MonthlyDataPoint[];
   incomeData: MonthlyDataPoint[];
   reliabilityData: MonthlyDataPoint[];
   biodiversityDetailData: DetailData;
@@ -38,53 +37,16 @@ interface UploadedCategories {
   soil: boolean;
 }
 
-// Base data values
-const baseData = {
-  biodiversityCredits: 1247,
-  income: 2450,
-  reliabilityScore: 58,
-  biodiversityTrend: [1000, 1050, 1100, 1120, 1180, 1200, 1220, 1247, 1280, 1300, 1320, 1350],
-  peakValue: 1350,
-  avgValue: 1180,
-  peakTrend: 15,
-  avgTrend: -12,
-};
+// Static bases used for chart shape — offsets are applied from the DB values
+const BIODIVERSITY_BASE_VALUE = 1247;
+const INCOME_BASE_VALUE = 2450;
+const RELIABILITY_BASE_VALUE = 58;
 
-// Incremental changes per category
-const categoryIncrements = {
-  hedgerows: {
-    biodiversityCredits: 280,
-    income: 320,
-    reliabilityScore: 12,
-    trendMultiplier: 1.15,
-    peakBonus: 180,
-    avgBonus: 120,
-    peakTrendBonus: 4,
-    avgTrendBonus: 5,
-  },
-  waterways: {
-    biodiversityCredits: 195,
-    income: 240,
-    reliabilityScore: 12,
-    trendMultiplier: 1.10,
-    peakBonus: 140,
-    avgBonus: 100,
-    peakTrendBonus: 3,
-    avgTrendBonus: 4,
-  },
-  soil: {
-    biodiversityCredits: 170,
-    income: 170,
-    reliabilityScore: 12,
-    trendMultiplier: 1.08,
-    peakBonus: 130,
-    avgBonus: 80,
-    peakTrendBonus: 2,
-    avgTrendBonus: 3,
-  },
-};
+const biodiversityMonthlyBase = [1050, 1120, 1180, 1247, 1310, 1380];
+const incomeMonthlyBase = [2100, 2250, 2350, 2450, 2580, 2700];
+const reliabilityMonthlyBase = [52, 55, 56, 58, 60, 62];
+const trendBase = [1000, 1050, 1100, 1120, 1180, 1200, 1220, 1247, 1280, 1300, 1320, 1350];
 
-// Helper to generate monthly data with proper flags
 function generateMonthlyData(baseValues: number[], offset: number): MonthlyDataPoint[] {
   const months = ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
   return months.map((month, index) => ({
@@ -95,80 +57,53 @@ function generateMonthlyData(baseValues: number[], offset: number): MonthlyDataP
   }));
 }
 
-// Calculate dashboard data based on uploaded categories
-function calculateDashboardData(uploaded: UploadedCategories): DashboardData {
-  let biodiversityCredits = baseData.biodiversityCredits;
-  let income = baseData.income;
-  let reliabilityScore = baseData.reliabilityScore;
-  let trendMultiplier = 1;
-  let peakValue = baseData.peakValue;
-  let avgValue = baseData.avgValue;
-  let peakTrend = baseData.peakTrend;
-  let avgTrend = baseData.avgTrend;
-
-  // Apply increments for each uploaded category
-  const categories: UploadCategory[] = ['hedgerows', 'waterways', 'soil'];
-  for (const category of categories) {
-    if (uploaded[category]) {
-      const inc = categoryIncrements[category];
-      biodiversityCredits += inc.biodiversityCredits;
-      income += inc.income;
-      reliabilityScore += inc.reliabilityScore;
-      trendMultiplier *= inc.trendMultiplier;
-      peakValue += inc.peakBonus;
-      avgValue += inc.avgBonus;
-      peakTrend += inc.peakTrendBonus;
-      avgTrend += inc.avgTrendBonus;
-    }
-  }
-
-  // Cap reliability score at 100
-  reliabilityScore = Math.min(reliabilityScore, 100);
-
-  // Generate scaled trend data
-  const scaledTrendData = baseData.biodiversityTrend.map(v =>
-    Math.round(v * trendMultiplier)
-  );
-
-  // Base monthly values for charts
-  const biodiversityBase = [1050, 1120, 1180, 1247, 1310, 1380];
-  const incomeBase = [2100, 2250, 2350, 2450, 2580, 2700];
-  const reliabilityBase = [52, 55, 56, 58, 60, 62];
-
-  // Calculate offsets
-  const bioOffset = biodiversityCredits - baseData.biodiversityCredits;
-  const incOffset = income - baseData.income;
-  const relOffset = reliabilityScore - baseData.reliabilityScore;
+function buildDashboardData(
+  biodiversityCredits: number,
+  income: number,
+  reliabilityScore: number,
+): DashboardData {
+  const bioOffset = biodiversityCredits - BIODIVERSITY_BASE_VALUE;
+  const incOffset = income - INCOME_BASE_VALUE;
+  const relOffset = reliabilityScore - RELIABILITY_BASE_VALUE;
 
   return {
     biodiversityCredits,
     income,
     reliabilityScore,
-    biodiversityData: generateMonthlyData(biodiversityBase, bioOffset),
-    incomeData: generateMonthlyData(incomeBase, incOffset),
-    reliabilityData: generateMonthlyData(reliabilityBase, relOffset),
+    natureData: generateMonthlyData(biodiversityMonthlyBase, bioOffset),
+    incomeData: generateMonthlyData(incomeMonthlyBase, incOffset),
+    reliabilityData: generateMonthlyData(reliabilityMonthlyBase, relOffset),
     biodiversityDetailData: {
-      trendData: scaledTrendData,
-      peakValue,
-      avgValue,
+      trendData: trendBase.map(v => Math.round(v + bioOffset)),
+      peakValue: 1350 + bioOffset,
+      avgValue: 1180 + bioOffset,
       peakLabel: 'Peak Credits (30d)',
       avgLabel: 'Average Credits',
-      peakTrend,
-      avgTrend,
+      peakTrend: 15,
+      avgTrend: -12,
     },
   };
 }
+
+const defaultDashboardData = buildDashboardData(
+  BIODIVERSITY_BASE_VALUE,
+  INCOME_BASE_VALUE,
+  RELIABILITY_BASE_VALUE,
+);
 
 interface DataContextType {
   dashboardData: DashboardData;
   uploadedCategories: UploadedCategories;
   triggerCategoryUpload: (category: UploadCategory) => void;
   resetData: () => void;
+  isLoading: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const [dashboardData] = useState<DashboardData>(defaultDashboardData);
+  const [isLoading] = useState(false);
   const [uploadedCategories, setUploadedCategories] = useState<UploadedCategories>({
     hedgerows: false,
     waterways: false,
@@ -176,27 +111,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   });
 
   const triggerCategoryUpload = (category: UploadCategory) => {
-    setUploadedCategories(prev => ({
-      ...prev,
-      [category]: true,
-    }));
+    setUploadedCategories(prev => ({ ...prev, [category]: true }));
   };
 
   const resetData = () => {
-    setUploadedCategories({
-      hedgerows: false,
-      waterways: false,
-      soil: false,
-    });
+    setUploadedCategories({ hedgerows: false, waterways: false, soil: false });
   };
 
-  const dashboardData = useMemo(
-    () => calculateDashboardData(uploadedCategories),
-    [uploadedCategories]
-  );
-
   return (
-    <DataContext.Provider value={{ dashboardData, uploadedCategories, triggerCategoryUpload, resetData }}>
+    <DataContext.Provider value={{ dashboardData, uploadedCategories, triggerCategoryUpload, resetData, isLoading }}>
       {children}
     </DataContext.Provider>
   );

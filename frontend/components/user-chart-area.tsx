@@ -37,9 +37,10 @@ interface MonthlyDataPoint {
 }
 
 interface UserChartAreaProps {
-  biodiversityData: MonthlyDataPoint[]
+  natureData: MonthlyDataPoint[]
   incomeData: MonthlyDataPoint[]
   reliabilityData: MonthlyDataPoint[]
+  variant?: 'green' | 'blue'
 }
 
 const chartConfig = {
@@ -50,17 +51,18 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function UserChartArea({
-  biodiversityData,
+  natureData,
   incomeData,
   reliabilityData,
+  variant = 'green',
 }: UserChartAreaProps) {
   const [activeMetric, setActiveMetric] = React.useState("biodiversity")
 
   const dataMap: Record<string, { data: MonthlyDataPoint[]; title: string; description: string }> = {
     biodiversity: {
-      data: biodiversityData,
-      title: "Biodiversity Credits",
-      description: "Monthly trend of biodiversity credits earned",
+      data: natureData,
+      title: "Nature Credits",
+      description: "Monthly trend of nature credits earned",
     },
     income: {
       data: incomeData,
@@ -78,7 +80,7 @@ export function UserChartArea({
 
   return (
     <div className="px-4 lg:px-6">
-      <Card className="@container/card">
+      <Card className={`@container/card ring-0 border-2 ${variant === 'blue' ? 'border-blue-200 dark:border-blue-800' : 'border-emerald-200 dark:border-emerald-800'}`}>
         <CardHeader>
           <CardTitle>{active.title}</CardTitle>
           <CardDescription>

@@ -47,6 +47,12 @@ export async function changePassword(currentPassword: string, newPassword: strin
   });
 }
 
+export async function getSurveyStatus(token: string): Promise<{ submitted: boolean }> {
+  return apiRequest('/api/survey/status', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export async function submitSurvey(responses: Record<string, unknown>, token: string) {
   return apiRequest('/api/survey/submit', {
     method: 'POST',
@@ -54,6 +60,75 @@ export async function submitSurvey(responses: Record<string, unknown>, token: st
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ responses }),
+  });
+}
+
+export async function getManagerDashboards() {
+  const token = localStorage.getItem('token');
+  return apiRequest('/api/dashboard/manager', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function updateManagerDashboardName(id: string, dashboardName: string) {
+  const token = localStorage.getItem('token');
+  return apiRequest(`/api/dashboard/manager/${id}/name`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ dashboard_name: dashboardName }),
+  });
+}
+
+export async function getManagerDashboard(id: string) {
+  const token = localStorage.getItem('token');
+  return apiRequest(`/api/dashboard/manager/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function getFarms() {
+  const token = localStorage.getItem('token');
+  return apiRequest('/api/dashboard/farms', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function updateDashboardName(farmId: string, dashboardName: string) {
+  const token = localStorage.getItem('token');
+  return apiRequest(`/api/dashboard/farms/${farmId}/name`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ dashboard_name: dashboardName }),
+  });
+}
+
+export async function getFarmById(id: string) {
+  const token = localStorage.getItem('token');
+  return apiRequest(`/api/dashboard/farms/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function getNotifications() {
+  const token = localStorage.getItem('token');
+  return apiRequest('/api/notifications', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function markNotificationRead(id: string) {
+  const token = localStorage.getItem('token');
+  return apiRequest(`/api/notifications/${id}/read`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function dismissNotification(id: string) {
+  const token = localStorage.getItem('token');
+  return apiRequest(`/api/notifications/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 

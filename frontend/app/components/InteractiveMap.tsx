@@ -122,6 +122,7 @@ export default function InteractiveMap({
 
     return () => {
       if (mapRef.current) {
+        mapRef.current.stop(); // cancel any in-flight zoom/pan animations before teardown
         mapRef.current.remove();
         mapRef.current = null;
       }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import {
   Avatar,
   AvatarFallback,
@@ -20,7 +21,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react"
+import { BellIcon, EllipsisVerticalIcon, LogOutIcon, SettingsIcon } from "lucide-react"
+import Link from "next/link"
+import { getNotifications } from "@/lib/api"
 
 export function NavUser({
   user,
@@ -34,6 +37,15 @@ export function NavUser({
   onLogout?: () => void
 }) {
   const { isMobile } = useSidebar()
+  const [notifCount, setNotifCount] = useState(0)
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (!token) return
+    getNotifications()
+      .then((data: any[]) => setNotifCount(data.filter((n: any) => !n.read).length))
+      .catch(() => {})
+  }, [])
 
   const initials = user.name
     .split(" ")
@@ -61,7 +73,14 @@ export function NavUser({
                 {user.email}
               </span>
             </div>
-            <EllipsisVerticalIcon className="ml-auto size-4" />
+            <div className="relative ml-auto">
+              <EllipsisVerticalIcon className="size-4" />
+              {notifCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex size-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                  {notifCount > 9 ? "9+" : notifCount}
+                </span>
+              )}
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56"
@@ -86,6 +105,21 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link href="/notifications" />}>
+              <div className="flex items-center gap-2 flex-1">
+                <BellIcon className="size-4" />
+                <span>Notifications</span>
+                {notifCount > 0 && (
+                  <span className="ml-auto flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                )}
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/settings" />}>
+              <SettingsIcon />
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onLogout}>
               <LogOutIcon />
               Log out

@@ -50,7 +50,7 @@ export default function RegisterPage() {
     }
   };
 
-  const goToLogin = () => router.push('/login');
+  const goToLogin = () => router.push('/hub');
 
   return (
     <div className="min-h-screen overflow-hidden relative bg-gradient-to-br from-blue-50 to-indigo-100">

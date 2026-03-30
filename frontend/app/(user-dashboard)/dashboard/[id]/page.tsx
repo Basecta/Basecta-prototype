@@ -12,6 +12,7 @@ import { MapPinIcon } from 'lucide-react';
 interface FarmData {
   id: string;
   farm_name: string;
+  farm_dashboard_name: string;
   location: string;
   nature_credits: number;
   income: number;
@@ -29,19 +30,19 @@ function makeMonthly(base: number[], offset: number) {
     month,
     value: Math.round(base[i] + offset),
     ...(i === 3 ? { current: true } : {}),
-    ...(i > 3  ? { future:  true } : {}),
+    ...(i > 3 ? { future: true } : {}),
   }));
 }
 
 function buildChartData(farm: FarmData) {
-  const bioOff = farm.nature_credits   - 1247;
-  const incOff = farm.income           - 2450;
+  const bioOff = farm.nature_credits  - 1247;
+  const incOff = farm.income - 2450;
   const relOff = farm.reliability_score - 58;
   return {
-    natureData:      makeMonthly(BIO_BASE, bioOff),
-    incomeData:      makeMonthly(INC_BASE, incOff),
-    reliabilityData: makeMonthly(REL_BASE, relOff),
-    natureDetailData: {
+    natureData: makeMonthly(BIO_BASE, bioOff),
+    incomeData:        makeMonthly(INC_BASE, incOff),
+    reliabilityData:   makeMonthly(REL_BASE, relOff),
+    biodiversityDetailData: {
       trendData:  TREND_BASE.map(v => Math.round(v + bioOff)),
       peakValue:  1350 + bioOff,
       avgValue:   1180 + bioOff,
@@ -53,26 +54,25 @@ function buildChartData(farm: FarmData) {
   };
 }
 
-export default function ManagerFarmDetailPage() {
+export default function FarmDashboardPage() {
   const router = useRouter();
   const params = useParams();
   const [farm, setFarm] = useState<FarmData | null>(null);
-  const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [isReliabilityDetailOpen, setIsReliabilityDetailOpen] = useState(false);
-  const [isCreditsDetailOpen, setIsCreditsDetailOpen] = useState(false);
+  const [isBiodiversityDetailOpen, setIsBiodiversityDetailOpen] = useState(false);
   const [isIncomeDetailOpen, setIsIncomeDetailOpen] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
     if (!token) { router.push('/login'); return; }
-    if (userData) setUsername(JSON.parse(userData).username ?? '');
 
     getFarmById(params.id as string)
-      .then(setFarm)
-      .catch(() => router.push('/hub'))
-      .finally(() => setLoading(false));
+      .then(data => { if (active) setFarm(data); })
+      .catch(() => { if (active) router.push('/hub'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [params.id, router]);
 
   if (loading || !farm) {
@@ -83,17 +83,19 @@ export default function ManagerFarmDetailPage() {
     );
   }
 
-  const { natureData, incomeData, reliabilityData, natureDetailData } = buildChartData(farm);
+  const { natureData, incomeData, reliabilityData, biodiversityDetailData } = buildChartData(farm);
   const noUploads = { hedgerows: false, waterways: false, soil: false };
 
   return (
     <>
       <div className="px-4 lg:px-6">
-        <Card className="border-2 border-blue-200 dark:border-blue-800">
+        <Card className="ring-0 border-2 border-emerald-200 dark:border-emerald-800">
           <CardHeader>
-            <CardTitle className="text-2xl">{farm.farm_name}</CardTitle>
+            <CardTitle className="text-2xl">{farm.farm_dashboard_name}</CardTitle>
             <CardDescription className="flex flex-col gap-1">
-              {username && <span>Owner: {username}</span>}
+              {farm.farm_dashboard_name !== farm.farm_name && (
+                <span>{farm.farm_name}</span>
+              )}
               <span className="flex items-center gap-1">
                 <MapPinIcon className="size-3.5" />
                 {farm.location}
@@ -108,53 +110,50 @@ export default function ManagerFarmDetailPage() {
         income={farm.income}
         reliabilityScore={farm.reliability_score}
         uploadedCategories={noUploads}
-        showUploads={false}
-        variant="blue"
       />
 
       <UserChartArea
         natureData={natureData}
         incomeData={incomeData}
         reliabilityData={reliabilityData}
-        variant="blue"
-      />
-
-      <DetailView
-        isOpen={isCreditsDetailOpen}
-        onClose={() => setIsCreditsDetailOpen(false)}
-        value={farm.nature_credits}
-        type="biodiversity"
-        dummy={false}
-        showGauge={false}
-        data={natureDetailData}
-      />
-
-      <DetailView
-        isOpen={isIncomeDetailOpen}
-        onClose={() => setIsIncomeDetailOpen(false)}
-        value={farm.income}
-        symbol="€"
-        type="income"
-        dummy={true}
-        showGauge={false}
-        targets={[
-          { label: 'Target',         value: 4000 },
-          { label: 'Good Threshold', value: 2500 },
-          { label: 'Minimum',        value: 1500 },
-        ]}
       />
 
       <DetailView
         isOpen={isReliabilityDetailOpen}
         onClose={() => setIsReliabilityDetailOpen(false)}
         value={farm.reliability_score}
-        symbol="%"
-        type="reliability"
+        symbol='%'
+        type='reliability'
         dummy={true}
         targets={[
-          { label: 'Optimal',        value: 70 },
+          { label: 'Optimal', value: 70 },
           { label: 'Good Threshold', value: 50 },
           { label: 'Fair Threshold', value: 30 },
+        ]}
+      />
+
+      <DetailView
+        isOpen={isBiodiversityDetailOpen}
+        onClose={() => setIsBiodiversityDetailOpen(false)}
+        value={farm.nature_credits}
+        type='biodiversity'
+        dummy={false}
+        showGauge={false}
+        data={biodiversityDetailData}
+      />
+
+      <DetailView
+        isOpen={isIncomeDetailOpen}
+        onClose={() => setIsIncomeDetailOpen(false)}
+        value={farm.income}
+        symbol='€'
+        type='income'
+        dummy={true}
+        showGauge={false}
+        targets={[
+          { label: 'Target', value: 4000 },
+          { label: 'Good Threshold', value: 2500 },
+          { label: 'Minimum', value: 1500 },
         ]}
       />
     </>

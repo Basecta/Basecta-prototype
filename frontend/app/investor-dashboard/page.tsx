@@ -17,13 +17,7 @@ export default function InvestorDashboard() {
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== 'investor') {
-      router.push('/login');
-      return;
-    }
-
-    setUser(parsedUser);
+    setUser(JSON.parse(userData));
   }, [router]);
 
   if (!user) return <LoadingScreen />;

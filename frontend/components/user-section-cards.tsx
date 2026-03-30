@@ -12,7 +12,7 @@ import {
 import { TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 
 interface UserSectionCardsProps {
-  biodiversityCredits: number
+  natureCredits: number
   income: number
   reliabilityScore: number
   uploadedCategories: {
@@ -20,13 +20,17 @@ interface UserSectionCardsProps {
     waterways: boolean
     soil: boolean
   }
+  showUploads?: boolean
+  variant?: 'green' | 'blue'
 }
 
 export function UserSectionCards({
-  biodiversityCredits,
+  natureCredits,
   income,
   reliabilityScore,
   uploadedCategories,
+  showUploads = true,
+  variant = 'green',
 }: UserSectionCardsProps) {
   const uploadCount = [
     uploadedCategories.hedgerows,
@@ -35,12 +39,12 @@ export function UserSectionCards({
   ].filter(Boolean).length
 
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+    <div className={`grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs *:data-[slot=card]:ring-0 *:data-[slot=card]:border-2 ${variant === 'blue' ? '*:data-[slot=card]:border-blue-200 dark:*:data-[slot=card]:border-blue-800' : '*:data-[slot=card]:border-emerald-200 dark:*:data-[slot=card]:border-emerald-800'} lg:px-6 @xl/main:grid-cols-2 dark:*:data-[slot=card]:bg-card ${showUploads ? '@5xl/main:grid-cols-4' : '@5xl/main:grid-cols-3'}`}>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Biodiversity Credits</CardDescription>
+          <CardDescription>Nature Credits</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {biodiversityCredits.toLocaleString()}
+            {natureCredits.toLocaleString()}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
@@ -123,7 +127,7 @@ export function UserSectionCards({
         </CardFooter>
       </Card>
 
-      <Card className="@container/card">
+      {showUploads && <Card className="@container/card">
         <CardHeader>
           <CardDescription>Data Uploads</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
@@ -156,7 +160,7 @@ export function UserSectionCards({
             Upload hedgerows, waterways, and soil data
           </div>
         </CardFooter>
-      </Card>
+      </Card>}
     </div>
   )
 }

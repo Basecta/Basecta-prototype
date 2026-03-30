@@ -57,8 +57,8 @@ export function ManagerChartArea({
   const dataMap: Record<string, { data: DataPoint[]; title: string; description: string }> = {
     biodiversity: {
       data: avgBiodiversityData,
-      title: "Average Biodiversity Credits",
-      description: "Average biodiversity credits across all managed farms",
+      title: "Average Nature Credits",
+      description: "Average nature credits across all managed farms",
     },
     reliability: {
       data: avgReliabilityData,
@@ -76,7 +76,7 @@ export function ManagerChartArea({
 
   return (
     <div className="px-4 lg:px-6">
-      <Card className="@container/card">
+      <Card className="@container/card ring-0 border-2 border-blue-200 dark:border-blue-800">
         <CardHeader>
           <CardTitle>{active.title}</CardTitle>
           <CardDescription>

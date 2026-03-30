@@ -1,3 +1,4 @@
+from uuid import UUID
 from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime
 import re
@@ -36,7 +37,7 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: int
+    user_id: UUID
     username: str
     email: str
     created_at: datetime
