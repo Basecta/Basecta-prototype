@@ -34,7 +34,11 @@ export default function SettingsPage() {
       return;
     }
 
-    setUser(JSON.parse(userData));
+    const parsed = JSON.parse(userData);
+    // has_password was added after Google sign-in support — default to true
+    // for existing sessions that pre-date the field
+    if (parsed.has_password === undefined) parsed.has_password = true;
+    setUser(parsed);
   }, [router]);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +79,10 @@ export default function SettingsPage() {
 
     try {
       await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
-      setSuccess('Password changed successfully!');
+      setSuccess(user.has_password ? 'Password changed successfully!' : 'Password set successfully!');
+      const updatedUser = { ...user, has_password: true };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -163,7 +170,7 @@ export default function SettingsPage() {
         <CardContent>
           {!showChangePassword && (
             <Button onClick={() => setShowChangePassword(true)}>
-              Change Password
+              {user.has_password ? 'Change Password' : 'Set a Password'}
             </Button>
           )}
 
@@ -173,7 +180,9 @@ export default function SettingsPage() {
               : 'max-h-0 opacity-0'
           }`}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Change Password</h3>
+              <h3 className="text-lg font-semibold">
+                {user.has_password ? 'Change Password' : 'Set a Password'}
+              </h3>
               <Button variant="ghost" size="sm" onClick={handleClosePasswordForm}>
                 ✕
               </Button>
@@ -192,17 +201,19 @@ export default function SettingsPage() {
             )}
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <Input
-                  type="password"
-                  id="currentPassword"
-                  name="currentPassword"
-                  value={passwordForm.currentPassword}
-                  onChange={handlePasswordChange}
-                  required
-                />
-              </div>
+              {user.has_password && (
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Input
+                    type="password"
+                    id="currentPassword"
+                    name="currentPassword"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordChange}
+                    required
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
@@ -232,7 +243,9 @@ export default function SettingsPage() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Changing Password...' : 'Change Password'}
+                {loading
+                  ? user.has_password ? 'Changing Password...' : 'Setting Password...'
+                  : user.has_password ? 'Change Password' : 'Set Password'}
               </Button>
             </form>
           </div>

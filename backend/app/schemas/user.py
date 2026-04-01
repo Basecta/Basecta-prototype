@@ -19,7 +19,7 @@ class UserCreate(BaseModel):
             raise ValueError('Password must contain at least one lowercase letter')
         if not re.search(r'\d', v):
             raise ValueError('Password must contain at least one number')
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
+        if not re.search(r'[!@#$%^&*()\-_=+\[\]{};:\'",.<>?/\\|`~]', v):
             raise ValueError('Password must contain at least one special character')
         return v
 
@@ -41,6 +41,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     created_at: datetime
+    has_password: bool
 
     class Config:
         from_attributes = True
@@ -49,6 +50,15 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
+class GoogleLogin(BaseModel):
+    id_token: str
+
+class GoogleTokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
+    is_new_user: bool
 
 class PasswordChange(BaseModel):
     current_password: str
@@ -65,6 +75,6 @@ class PasswordChange(BaseModel):
             raise ValueError('Password must contain at least one lowercase letter')
         if not re.search(r'\d', v):
             raise ValueError('Password must contain at least one number')
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
+        if not re.search(r'[!@#$%^&*()\-_=+\[\]{};:\'",.<>?/\\|`~]', v):
             raise ValueError('Password must contain at least one special character')
         return v

@@ -12,7 +12,11 @@ export async function apiRequest(endpoint: string, options?: RequestInit) {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.detail || 'An error occurred');
+    const detail = data.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((e: any) => e.msg?.replace(/^Value error, /, '') ?? 'Validation error').join('. ')
+      : detail || 'An error occurred';
+    throw new Error(message);
   }
 
   return data;
@@ -29,6 +33,13 @@ export async function login(email: string, password: string) {
   return apiRequest('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function loginWithGoogle(idToken: string) {
+  return apiRequest('/api/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ id_token: idToken }),
   });
 }
 

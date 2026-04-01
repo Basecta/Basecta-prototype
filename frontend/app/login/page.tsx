@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { login } from '@/lib/api';
+import { login, loginWithGoogle } from '@/lib/api';
 import { FormInput } from '../components/FormInput';
 import { AlertMessage } from '../components/AlertMessage';
 
@@ -12,6 +12,40 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const initGoogle = () => {
+      const google = (window as any).google;
+      if (!google?.accounts?.id) return;
+      google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        callback: async (response: { credential: string }) => {
+          setLoading(true);
+          setError('');
+          try {
+            const data = await loginWithGoogle(response.credential);
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            router.push('/hub');
+          } catch (err: any) {
+            setError(err.message || 'Google sign-in failed. Please try again.');
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+      const btn = document.getElementById('google-signin-btn');
+      if (btn) google.accounts.id.renderButton(btn, { theme: 'outline', size: 'large', width: btn.offsetWidth });
+    };
+
+    const google = (window as any).google;
+    if (google?.accounts?.id) {
+      initGoogle();
+    } else {
+      const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+      script?.addEventListener('load', initGoogle);
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -72,6 +106,14 @@ export default function LoginPage() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div className="flex items-center gap-2 my-4">
+          <hr className="flex-1 border-gray-300 dark:border-gray-600" />
+          <span className="text-xs text-gray-400">or</span>
+          <hr className="flex-1 border-gray-300 dark:border-gray-600" />
+        </div>
+
+        <div id="google-signin-btn" className="w-full" />
 
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
           Don&apos;t have an account?{' '}
