@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const initGoogle = () => {
@@ -50,11 +51,23 @@ export default function LoginPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+    if (fieldErrors[e.target.name]) {
+      setFieldErrors(prev => ({ ...prev, [e.target.name]: false }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const errors: Record<string, boolean> = {};
+    if (!formData.email.trim()) errors.email = true;
+    if (!formData.password) errors.password = true;
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -77,7 +90,7 @@ export default function LoginPage() {
 
         {error && <div className="mb-4"><AlertMessage type="error" message={error} /></div>}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <FormInput
             label="Email"
             id="email"
@@ -87,6 +100,8 @@ export default function LoginPage() {
             onChange={handleChange}
             required
             placeholder="Enter email"
+            autoComplete="username"
+            error={fieldErrors.email}
           />
           <FormInput
             label="Password"
@@ -97,6 +112,7 @@ export default function LoginPage() {
             onChange={handleChange}
             required
             placeholder="Enter password"
+            error={fieldErrors.password}
           />
           <button
             type="submit"

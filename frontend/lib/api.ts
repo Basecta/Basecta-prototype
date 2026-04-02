@@ -22,10 +22,24 @@ export async function apiRequest(endpoint: string, options?: RequestInit) {
   return data;
 }
 
-export async function register(username: string, email: string, password: string) {
+export async function sendVerificationCode(email: string) {
+  return apiRequest('/api/auth/send-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function verifyCode(email: string, code: string) {
+  return apiRequest('/api/auth/verify-code', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+}
+
+export async function register(username: string, email: string, password: string, verificationToken: string) {
   return apiRequest('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, email, password, verification_token: verificationToken }),
   });
 }
 

@@ -7,7 +7,7 @@ import { ReactNode } from 'react';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} storageKey="basecta-theme">
       <DataProvider>
         <TooltipProvider>{children}</TooltipProvider>
       </DataProvider>

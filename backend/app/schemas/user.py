@@ -60,6 +60,16 @@ class GoogleTokenResponse(BaseModel):
     user: UserResponse
     is_new_user: bool
 
+class UserCreateVerified(UserCreate):
+    verification_token: str
+
+class SendVerification(BaseModel):
+    email: EmailStr
+
+class VerifyCode(BaseModel):
+    email: EmailStr
+    code: str
+
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str

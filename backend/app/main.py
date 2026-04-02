@@ -5,6 +5,7 @@ from app.database import engine, Base
 from app.models import survey as _survey_models        # noqa: F401
 from app.models import dashboard as _dashboard_models  # noqa: F401
 from app.models import notification as _notification_models  # noqa: F401
+from app.models import pending_verification as _pending_verification_models  # noqa: F401
 from app.api import auth, upload, survey, dashboard, notifications
 
 # Create database tables
@@ -31,8 +32,27 @@ AFTER INSERT ON farms
 FOR EACH ROW EXECUTE FUNCTION fn_create_farm_dashboard();
 """
 
+_PENDING_UNIQUE_SQL = """
+-- Remove any duplicate pending verifications, keeping the most recent per email
+DELETE FROM pending_verifications p1
+USING pending_verifications p2
+WHERE p1.email = p2.email AND p1.created_at < p2.created_at;
+
+-- Add unique constraint on email if it doesn't already exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uq_pending_verifications_email'
+    ) THEN
+        ALTER TABLE pending_verifications
+        ADD CONSTRAINT uq_pending_verifications_email UNIQUE (email);
+    END IF;
+END $$;
+"""
+
 with engine.connect() as conn:
     conn.execute(text(_TRIGGER_SQL))
+    conn.execute(text(_PENDING_UNIQUE_SQL))
     conn.commit()
 
 app = FastAPI(title="Biodiversity Farm API")
