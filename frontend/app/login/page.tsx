@@ -103,17 +103,24 @@ export default function LoginPage() {
             autoComplete="username"
             error={fieldErrors.email}
           />
-          <FormInput
-            label="Password"
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            placeholder="Enter password"
-            error={fieldErrors.password}
-          />
+          <div>
+            <FormInput
+              label="Password"
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              placeholder="Enter password"
+              error={fieldErrors.password}
+            />
+            <div className="text-right mt-1">
+              <Link href="/forgot-password" className="text-xs text-indigo-500 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
           <button
             type="submit"
             disabled={loading}

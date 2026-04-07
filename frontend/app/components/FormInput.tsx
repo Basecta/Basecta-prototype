@@ -29,7 +29,7 @@ export function FormInput({
 }: FormInputProps) {
   const borderClass = error
     ? 'border-red-400 dark:border-red-500 focus:ring-red-400'
-    : `border-gray-300 focus:ring-indigo-500${light ? '' : ' dark:border-gray-600'}`;
+    : `border-gray-300 focus:ring-ring${light ? '' : ' dark:border-gray-600'}`;
 
   const darkClass = light ? '' : ' dark:bg-gray-800 dark:text-gray-100';
 

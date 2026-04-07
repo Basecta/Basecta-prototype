@@ -9,6 +9,7 @@ import urllib.request
 from app.database import get_db
 from app.models.user import User
 from app.models.pending_verification import PendingVerification
+from app.models.password_reset_token import PasswordResetToken
 from app.schemas.user import (
     UserCreateVerified,
     UserLogin,
@@ -19,15 +20,18 @@ from app.schemas.user import (
     GoogleTokenResponse,
     SendVerification,
     VerifyCode,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.utils.security import (
     hash_password,
     verify_password,
     create_access_token,
     verify_token,
+    generate_reset_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
-from app.utils.email import send_verification_code
+from app.utils.email import send_verification_code, send_password_reset_email
 from app.utils.rate_limiter import email_send_limiter, ip_send_limiter
 
 def _verify_google_token(id_token: str) -> dict | None:
@@ -241,6 +245,70 @@ def change_password(
     db.commit()
 
     return {"message": "Password successfully changed"}
+
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+
+    # Always return the same response to prevent email enumeration.
+    # Also silently skip Google-only accounts (no password to reset).
+    if not user or user.hashed_password is None:
+        return {"message": "If that email is registered, you'll receive a reset link shortly."}
+
+    # Opportunistic cleanup: remove all expired tokens across all users
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.expires_at < datetime.utcnow()
+    ).delete()
+
+    # Invalidate any remaining unused tokens for this user
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user.user_id,
+    ).delete()
+
+    token = generate_reset_token()
+    reset_token = PasswordResetToken(
+        token=token,
+        user_id=user.user_id,
+        expires_at=datetime.utcnow() + timedelta(hours=1),
+    )
+    db.add(reset_token)
+    db.commit()
+
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    reset_link = f"{frontend_url}/reset-password?token={token}"
+    send_password_reset_email(user.email, reset_link)
+
+    return {"message": "If that email is registered, you'll receive a reset link shortly."}
+
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    reset_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == data.token
+    ).first()
+
+    if not reset_token or reset_token.used or datetime.utcnow() > reset_token.expires_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link is invalid or has expired. Please request a new one."
+        )
+
+    user = db.query(User).filter(User.user_id == reset_token.user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if user.hashed_password and verify_password(data.new_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from your current password."
+        )
+
+    user.hashed_password = hash_password(data.new_password)
+    db.delete(reset_token)
+    db.commit()
+
+    return {"message": "Password successfully reset. You can now log in."}
 
 
 @router.post("/google", response_model=GoogleTokenResponse)
