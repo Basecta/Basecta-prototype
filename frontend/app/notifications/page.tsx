@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getNotifications, markNotificationRead, dismissNotification } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { BellIcon, ChevronRightIcon, XIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,18 +38,21 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     let active = true;
-    const token = localStorage.getItem('token');
-    if (!token) { router.replace('/login'); return; }
+    const init = async () => {
+      const token = await initAuth();
+      if (!token) { router.replace('/login'); return; }
 
-    getNotifications()
-      .then((data: Notification[]) => {
-        if (!active) return;
-        setNotifications(data);
-        // Mark as read only notifications that are dismissible (action-locked ones get marked read by completing the action)
-        data.filter(n => !n.read && n.dismissible).forEach(n => markNotificationRead(n.id).catch(() => {}));
-      })
-      .catch(() => {})
-      .finally(() => { if (active) setLoading(false); });
+      getNotifications()
+        .then((data: Notification[]) => {
+          if (!active) return;
+          setNotifications(data);
+          // Mark as read only notifications that are dismissible (action-locked ones get marked read by completing the action)
+          data.filter(n => !n.read && n.dismissible).forEach(n => markNotificationRead(n.id).catch(() => {}));
+        })
+        .catch(() => {})
+        .finally(() => { if (active) setLoading(false); });
+    };
+    init();
     return () => { active = false; };
   }, [router]);
 

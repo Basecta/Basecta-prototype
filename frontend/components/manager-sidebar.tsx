@@ -14,6 +14,7 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/nav-user"
+import { logoutAuth } from "@/lib/auth-store"
 import { LayoutDashboardIcon } from "lucide-react"
 
 export function ManagerSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -38,8 +39,8 @@ export function ManagerSidebar({ ...props }: React.ComponentProps<typeof Sidebar
     }
   }, [pathname])
 
-  const handleLogout = () => {
-    localStorage.removeItem("token")
+  const handleLogout = async () => {
+    await logoutAuth()
     localStorage.removeItem("user")
     router.push("/")
   }

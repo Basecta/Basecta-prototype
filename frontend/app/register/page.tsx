@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { sendVerificationCode, verifyCode, register, loginWithGoogle } from '@/lib/api';
+import { setAccessToken } from '@/lib/auth-store';
 import { FormInput } from '../components/FormInput';
 import { AlertMessage } from '../components/AlertMessage';
 import { OnboardingSurvey } from '../components/OnboardingSurvey';
@@ -51,9 +52,6 @@ export default function RegisterPage() {
   const [storedVerifiedToken, setStoredVerifiedToken] = useState('');
 
   const digitRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  // ── Auth state ───────────────────────────────────────────────────────────────
-  const [authToken, setAuthToken] = useState('');
 
   // Resend cooldown countdown
   useEffect(() => {
@@ -130,9 +128,8 @@ export default function RegisterPage() {
       setFormLoading(true);
       try {
         const data = await register(formData.username, formData.email, formData.password, storedVerifiedToken);
-        localStorage.setItem('token', data.access_token);
+        setAccessToken(data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        setAuthToken(data.access_token);
         setStoredVerifiedToken('');
         setStep(2);
         return;
@@ -181,9 +178,8 @@ export default function RegisterPage() {
       // Code correct — attempt registration immediately
       try {
         const data = await register(formData.username, formData.email, formData.password, verified_token);
-        localStorage.setItem('token', data.access_token);
+        setAccessToken(data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        setAuthToken(data.access_token);
         setStoredVerifiedToken('');
         setStep(2);
       } catch (registerErr: unknown) {
@@ -275,10 +271,9 @@ export default function RegisterPage() {
           setFormError('');
           try {
             const data = await loginWithGoogle(response.credential);
-            localStorage.setItem('token', data.access_token);
+            setAccessToken(data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
             if (data.is_new_user) {
-              setAuthToken(data.access_token);
               setStep(2);
             } else {
               router.push('/hub');
@@ -478,7 +473,6 @@ export default function RegisterPage() {
         style={panelStyle(2)}
       >
         <OnboardingSurvey
-          token={authToken}
           onComplete={goToHub}
           onSkip={goToHub}
         />

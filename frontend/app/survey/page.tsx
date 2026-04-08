@@ -5,31 +5,32 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { OnboardingSurvey } from '@/app/components/OnboardingSurvey';
 import { getSurveyStatus } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { CheckCircle2Icon } from 'lucide-react';
 
 type State = 'loading' | 'survey' | 'done';
 
 export default function SurveyPage() {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
   const [state, setState] = useState<State>('loading');
 
   useEffect(() => {
-    const t = localStorage.getItem('token');
-    if (!t) { router.replace('/login'); return; }
-    setToken(t);
-    getSurveyStatus(t)
-      .then(({ submitted }) => setState(submitted ? 'done' : 'survey'))
-      .catch(() => setState('survey'));
+    const init = async () => {
+      const token = await initAuth();
+      if (!token) { router.replace('/login'); return; }
+      getSurveyStatus()
+        .then(({ submitted }) => setState(submitted ? 'done' : 'survey'))
+        .catch(() => setState('survey'));
+    };
+    init();
   }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-indigo-100">
       {state === 'loading' && null}
 
-      {state === 'survey' && token && (
+      {state === 'survey' && (
         <OnboardingSurvey
-          token={token}
           onComplete={() => setState('done')}
           onSkip={() => router.replace('/hub')}
         />

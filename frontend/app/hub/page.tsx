@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sprout, BarChart3, TrendingUp, Plus, Pencil, Check, X, RotateCcw } from 'lucide-react';
 import { getFarms, getManagerDashboards, updateDashboardName, updateManagerDashboardName } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { useHubFilter } from './hub-filter-context';
 
 interface Farm {
@@ -50,23 +51,26 @@ export default function HubPage() {
 
   useEffect(() => {
     let active = true;
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (!token || !userData) {
-      router.push('/login');
-      setFarmsLoading(false);
-      return;
-    }
-    setUser(JSON.parse(userData));
-    getFarms()
-      .then(data => { if (active) setFarms(data); })
-      .catch(() => {})
-      .finally(() => { if (active) setFarmsLoading(false); });
+    const init = async () => {
+      const token = await initAuth();
+      const userData = localStorage.getItem('user');
+      if (!token || !userData) {
+        router.push('/login');
+        setFarmsLoading(false);
+        return;
+      }
+      setUser(JSON.parse(userData));
+      getFarms()
+        .then(data => { if (active) setFarms(data); })
+        .catch(() => {})
+        .finally(() => { if (active) setFarmsLoading(false); });
 
-    getManagerDashboards()
-      .then(data => { if (active) setManagerDashboards(data); })
-      .catch(() => {})
-      .finally(() => { if (active) setManagerLoading(false); });
+      getManagerDashboards()
+        .then(data => { if (active) setManagerDashboards(data); })
+        .catch(() => {})
+        .finally(() => { if (active) setManagerLoading(false); });
+    };
+    init();
     return () => { active = false; };
   }, [router]);
 

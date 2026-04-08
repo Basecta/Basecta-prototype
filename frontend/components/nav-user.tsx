@@ -40,8 +40,6 @@ export function NavUser({
   const [notifCount, setNotifCount] = useState(0)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) return
     getNotifications()
       .then((data: any[]) => setNotifCount(data.filter((n: any) => !n.read).length))
       .catch(() => {})

@@ -7,6 +7,7 @@ from app.models import dashboard as _dashboard_models  # noqa: F401
 from app.models import notification as _notification_models  # noqa: F401
 from app.models import pending_verification as _pending_verification_models  # noqa: F401
 from app.models import password_reset_token as _password_reset_token_models  # noqa: F401
+from app.models import refresh_token as _refresh_token_models  # noqa: F401
 from app.api import auth, upload, survey, dashboard, notifications
 
 # Create database tables

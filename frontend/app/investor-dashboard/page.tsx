@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { initAuth } from '@/lib/auth-store';
 import { LoadingScreen } from '../components/LoadingScreen';
 
 export default function InvestorDashboard() {
@@ -9,15 +10,13 @@ export default function InvestorDashboard() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-
-    if (!token || !userData) {
-      router.push('/login');
-      return;
-    }
-
-    setUser(JSON.parse(userData));
+    const init = async () => {
+      const token = await initAuth();
+      const userData = localStorage.getItem('user');
+      if (!token || !userData) { router.push('/login'); return; }
+      setUser(JSON.parse(userData));
+    };
+    init();
   }, [router]);
 
   if (!user) return <LoadingScreen />;

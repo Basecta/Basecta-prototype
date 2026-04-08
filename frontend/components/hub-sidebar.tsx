@@ -13,6 +13,7 @@ import {
 import { NavUser } from "@/components/nav-user"
 import { Search, X } from "lucide-react"
 import { useHubFilter, FilterType } from "@/app/hub/hub-filter-context"
+import { logoutAuth } from "@/lib/auth-store"
 
 const FILTERS: { label: string; value: FilterType }[] = [
   { label: "All Dashboards",      value: "all"      },
@@ -31,8 +32,8 @@ export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (userData) setUser(JSON.parse(userData))
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem("token")
+  const handleLogout = async () => {
+    await logoutAuth()
     localStorage.removeItem("user")
     router.push("/")
   }
@@ -71,10 +72,10 @@ export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <button
                   key={f.value}
                   onClick={() => setActiveFilter(f.value)}
-                  className={`w-full text-left rounded-md px-3 py-1.5 text-sm transition-colors cursor-pointer ${
+                  className={`w-full text-left rounded-md px-3 py-1.5 text-sm transition-colors cursor-pointer border ${
                     activeFilter === f.value
-                      ? "bg-primary text-primary-foreground font-medium hover:bg-primary/80"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   }`}
                 >
                   {f.label}

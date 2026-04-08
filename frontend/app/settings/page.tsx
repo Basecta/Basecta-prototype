@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { changePassword } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { FormInput } from '../components/FormInput';
@@ -24,19 +25,22 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    const init = async () => {
+      const token = await initAuth();
+      const userData = localStorage.getItem('user');
 
-    if (!token || !userData) {
-      router.push('/login');
-      return;
-    }
+      if (!token || !userData) {
+        router.push('/login');
+        return;
+      }
 
-    const parsed = JSON.parse(userData);
-    // has_password was added after Google sign-in support — default to true
-    // for existing sessions that pre-date the field
-    if (parsed.has_password === undefined) parsed.has_password = true;
-    setUser(parsed);
+      const parsed = JSON.parse(userData);
+      // has_password was added after Google sign-in support — default to true
+      // for existing sessions that pre-date the field
+      if (parsed.has_password === undefined) parsed.has_password = true;
+      setUser(parsed);
+    };
+    init();
   }, [router]);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {

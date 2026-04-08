@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getFarmById } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { UserSectionCards } from '@/components/user-section-cards';
 import { UserChartArea } from '@/components/user-chart-area';
 import { DetailView } from '@/app/components/DetailView';
@@ -65,13 +66,16 @@ export default function FarmDashboardPage() {
 
   useEffect(() => {
     let active = true;
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    const init = async () => {
+      const token = await initAuth();
+      if (!token) { router.push('/login'); return; }
 
-    getFarmById(params.id as string)
-      .then(data => { if (active) setFarm(data); })
-      .catch(() => { if (active) router.push('/hub'); })
-      .finally(() => { if (active) setLoading(false); });
+      getFarmById(params.id as string)
+        .then(data => { if (active) setFarm(data); })
+        .catch(() => { if (active) router.push('/hub'); })
+        .finally(() => { if (active) setLoading(false); });
+    };
+    init();
     return () => { active = false; };
   }, [params.id, router]);
 

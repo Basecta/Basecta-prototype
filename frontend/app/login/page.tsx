@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login, loginWithGoogle } from '@/lib/api';
+import { setAccessToken } from '@/lib/auth-store';
 import { FormInput } from '../components/FormInput';
 import { AlertMessage } from '../components/AlertMessage';
 
@@ -25,7 +26,7 @@ export default function LoginPage() {
           setError('');
           try {
             const data = await loginWithGoogle(response.credential);
-            localStorage.setItem('token', data.access_token);
+            setAccessToken(data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
             router.push('/hub');
           } catch (err: any) {
@@ -72,7 +73,7 @@ export default function LoginPage() {
 
     try {
       const data = await login(formData.email, formData.password);
-      localStorage.setItem('token', data.access_token);
+      setAccessToken(data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
       router.push('/hub');
     } catch (err: any) {

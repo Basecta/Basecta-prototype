@@ -50,7 +50,6 @@ interface SurveyAnswers {
 }
 
 interface Props {
-  token: string;
   onComplete: () => void;
   onSkip: () => void;
   devMode?: boolean;
@@ -358,7 +357,7 @@ const stepTitles = [
 ];
 
 // Renders the survey as a plain card — positioning/animation is handled by the parent.
-export function OnboardingSurvey({ token, onComplete, onSkip, devMode = false }: Props) {
+export function OnboardingSurvey({ onComplete, onSkip, devMode = false }: Props) {
   const [step, setStep] = useState(0);
   const [prevStep, setPrevStep] = useState<number | null>(null);
   const [dir, setDir] = useState<1 | -1>(1);
@@ -489,7 +488,7 @@ export function OnboardingSurvey({ token, onComplete, onSkip, devMode = false }:
     setLoading(true);
     setError('');
     try {
-      await submitSurvey(answers as unknown as Record<string, unknown>, token);
+      await submitSurvey(answers as unknown as Record<string, unknown>);
       onComplete();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to save survey. Please try again.';

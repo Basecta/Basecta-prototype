@@ -11,8 +11,6 @@ function SidebarTriggerWithBadge() {
   const [hasNotifications, setHasNotifications] = useState(false)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) return
     getNotifications()
       .then((data: any[]) => setHasNotifications(data.some((n: any) => !n.read)))
       .catch(() => {})
@@ -34,7 +32,7 @@ export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?:
       <div className="flex w-full items-center gap-2 px-4 lg:px-6">
         {showSidebarTrigger ? <SidebarTriggerWithBadge /> : <div className="size-9 -ml-1" />}
         <Link href="/hub" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Image src="/logo_notext.png" alt="Basecta logo" width={28} height={28} />
+          <Image src="/basecta_logo_notext.png" alt="Basecta logo" width={28} height={28} />
           <h1 className="text-base font-semibold">Basecta</h1>
         </Link>
       </div>

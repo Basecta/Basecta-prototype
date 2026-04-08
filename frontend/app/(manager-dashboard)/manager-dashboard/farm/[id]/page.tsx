@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getFarmById } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { UserSectionCards } from '@/components/user-section-cards';
 import { UserChartArea } from '@/components/user-chart-area';
 import { DetailView } from '@/app/components/DetailView';
@@ -64,15 +65,18 @@ export default function ManagerFarmDetailPage() {
   const [isIncomeDetailOpen, setIsIncomeDetailOpen] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (!token) { router.push('/login'); return; }
-    if (userData) setUsername(JSON.parse(userData).username ?? '');
+    const init = async () => {
+      const token = await initAuth();
+      if (!token) { router.push('/login'); return; }
+      const userData = localStorage.getItem('user');
+      if (userData) setUsername(JSON.parse(userData).username ?? '');
 
-    getFarmById(params.id as string)
-      .then(setFarm)
-      .catch(() => router.push('/hub'))
-      .finally(() => setLoading(false));
+      getFarmById(params.id as string)
+        .then(setFarm)
+        .catch(() => router.push('/hub'))
+        .finally(() => setLoading(false));
+    };
+    init();
   }, [params.id, router]);
 
   if (loading || !farm) {

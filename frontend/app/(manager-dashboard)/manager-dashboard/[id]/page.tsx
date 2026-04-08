@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getManagerDashboard, getFarms } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { ManagerSectionCards } from '@/components/manager-section-cards';
 import { ManagerChartArea } from '@/components/manager-chart-area';
 import { FarmsDataTable } from '@/components/farms-data-table';
@@ -65,32 +66,35 @@ export default function ManagerDashboardPage() {
 
   useEffect(() => {
     let active = true;
-    const token = localStorage.getItem('token');
-    if (!token) { router.push('/login'); return; }
+    const init = async () => {
+      const token = await initAuth();
+      if (!token) { router.push('/login'); return; }
 
-    const id = params.id as string;
+      const id = params.id as string;
 
-    Promise.all([getManagerDashboard(id), getFarms()])
-      .then(([md, allFarms]) => {
-        if (!active) return;
-        setDashboard(md);
-        const farmIdSet = new Set<string>(md.farm_ids.map((fid: any) => String(fid)));
-        setFarms(
-          allFarms
-            .filter((f: any) => farmIdSet.has(String(f.farm_id)))
-            .map((f: any) => ({
-              farm_id: String(f.farm_id),
-              farm_name: f.farm_name,
-              owner: '',
-              location: f.location,
-              natureCredits: f.nature_credits,
-              income: f.income,
-              reliabilityScore: f.reliability_score,
-            }))
-        );
-      })
-      .catch(() => { if (active) router.push('/hub'); })
-      .finally(() => { if (active) setLoading(false); });
+      Promise.all([getManagerDashboard(id), getFarms()])
+        .then(([md, allFarms]) => {
+          if (!active) return;
+          setDashboard(md);
+          const farmIdSet = new Set<string>(md.farm_ids.map((fid: any) => String(fid)));
+          setFarms(
+            allFarms
+              .filter((f: any) => farmIdSet.has(String(f.farm_id)))
+              .map((f: any) => ({
+                farm_id: String(f.farm_id),
+                farm_name: f.farm_name,
+                owner: '',
+                location: f.location,
+                natureCredits: f.nature_credits,
+                income: f.income,
+                reliabilityScore: f.reliability_score,
+              }))
+          );
+        })
+        .catch(() => { if (active) router.push('/hub'); })
+        .finally(() => { if (active) setLoading(false); });
+    };
+    init();
     return () => { active = false; };
   }, [params.id, router]);
 

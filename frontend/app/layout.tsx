@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "Basecta",
   description: "Biodiversity farm management platform",
   icons: {
-    icon: "/logo_notext.png",
+    icon: "/basecta_logo_notext.png",
   },
 };
 

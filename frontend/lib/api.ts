@@ -1,13 +1,37 @@
+import { getAccessToken, refreshAccessToken, setAccessToken } from './auth-store';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export async function apiRequest(endpoint: string, options?: RequestInit) {
-  const response = await fetch(`${API_URL}${endpoint}`, {
+function buildHeaders(overrides?: HeadersInit): HeadersInit {
+  const token = getAccessToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...overrides,
+  };
+}
+
+async function doFetch(endpoint: string, options?: RequestInit): Promise<Response> {
+  return fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    credentials: 'include',
+    headers: buildHeaders(options?.headers),
   });
+}
+
+export async function apiRequest(endpoint: string, options?: RequestInit) {
+  let response = await doFetch(endpoint, options);
+
+  // On 401, attempt a silent token refresh and retry once
+  if (response.status === 401) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      response = await doFetch(endpoint, options);
+    } else if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+      throw new Error('Session expired. Please log in again.');
+    }
+  }
 
   const data = await response.json();
 
@@ -57,6 +81,11 @@ export async function loginWithGoogle(idToken: string) {
   });
 }
 
+export async function logoutUser() {
+  setAccessToken(null);
+  return apiRequest('/api/auth/logout', { method: 'POST' });
+}
+
 export async function forgotPassword(email: string) {
   return apiRequest('/api/auth/forgot-password', {
     method: 'POST',
@@ -72,13 +101,8 @@ export async function resetPassword(token: string, newPassword: string) {
 }
 
 export async function changePassword(currentPassword: string, newPassword: string) {
-  const token = localStorage.getItem('token');
-  
   return apiRequest('/api/auth/change-password', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
     body: JSON.stringify({
       current_password: currentPassword,
       new_password: newPassword,
@@ -86,94 +110,61 @@ export async function changePassword(currentPassword: string, newPassword: strin
   });
 }
 
-export async function getSurveyStatus(token: string): Promise<{ submitted: boolean }> {
-  return apiRequest('/api/survey/status', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function getSurveyStatus(): Promise<{ submitted: boolean }> {
+  return apiRequest('/api/survey/status');
 }
 
-export async function submitSurvey(responses: Record<string, unknown>, token: string) {
+export async function submitSurvey(responses: Record<string, unknown>) {
   return apiRequest('/api/survey/submit', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({ responses }),
   });
 }
 
 export async function getManagerDashboards() {
-  const token = localStorage.getItem('token');
-  return apiRequest('/api/dashboard/manager', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiRequest('/api/dashboard/manager');
 }
 
 export async function updateManagerDashboardName(id: string, dashboardName: string) {
-  const token = localStorage.getItem('token');
   return apiRequest(`/api/dashboard/manager/${id}/name`, {
     method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ dashboard_name: dashboardName }),
   });
 }
 
 export async function getManagerDashboard(id: string) {
-  const token = localStorage.getItem('token');
-  return apiRequest(`/api/dashboard/manager/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiRequest(`/api/dashboard/manager/${id}`);
 }
 
 export async function getFarms() {
-  const token = localStorage.getItem('token');
-  return apiRequest('/api/dashboard/farms', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiRequest('/api/dashboard/farms');
 }
 
 export async function updateDashboardName(farmId: string, dashboardName: string) {
-  const token = localStorage.getItem('token');
   return apiRequest(`/api/dashboard/farms/${farmId}/name`, {
     method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ dashboard_name: dashboardName }),
   });
 }
 
 export async function getFarmById(id: string) {
-  const token = localStorage.getItem('token');
-  return apiRequest(`/api/dashboard/farms/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiRequest(`/api/dashboard/farms/${id}`);
 }
 
 export async function getNotifications() {
-  const token = localStorage.getItem('token');
-  return apiRequest('/api/notifications', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiRequest('/api/notifications');
 }
 
 export async function markNotificationRead(id: string) {
-  const token = localStorage.getItem('token');
-  return apiRequest(`/api/notifications/${id}/read`, {
-    method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiRequest(`/api/notifications/${id}/read`, { method: 'PATCH' });
 }
 
 export async function dismissNotification(id: string) {
-  const token = localStorage.getItem('token');
-  return apiRequest(`/api/notifications/${id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiRequest(`/api/notifications/${id}`, { method: 'DELETE' });
 }
 
 export async function uploadFile(file: File, category: string) {
-  const token = localStorage.getItem('token');
-  
+  const token = getAccessToken();
   if (!token) {
     throw new Error('Not authenticated');
   }
@@ -181,17 +172,28 @@ export async function uploadFile(file: File, category: string) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_URL}/api/upload/${category}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      // Don't set Content-Type - let browser set it with boundary for FormData
-    },
-    body: formData,
-  });
+  const doUpload = (authToken: string) =>
+    fetch(`${API_URL}/api/upload/${category}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${authToken}` },
+      body: formData,
+    });
+
+  let response = await doUpload(token);
+
+  // On 401, attempt silent refresh and retry
+  if (response.status === 401) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      response = await doUpload(newToken);
+    } else if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+      throw new Error('Session expired. Please log in again.');
+    }
+  }
 
   const data = await response.json();
-
   if (!response.ok) {
     throw new Error(data.detail || 'Upload failed');
   }

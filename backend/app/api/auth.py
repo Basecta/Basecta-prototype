@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Header
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Header
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import os
@@ -10,6 +10,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.pending_verification import PendingVerification
 from app.models.password_reset_token import PasswordResetToken
+from app.models.refresh_token import RefreshToken
 from app.schemas.user import (
     UserCreateVerified,
     UserLogin,
@@ -27,9 +28,12 @@ from app.utils.security import (
     hash_password,
     verify_password,
     create_access_token,
+    create_refresh_token,
+    hash_token,
     verify_token,
     generate_reset_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    REFRESH_TOKEN_EXPIRE_DAYS,
 )
 from app.utils.email import send_verification_code, send_password_reset_email
 from app.utils.rate_limiter import email_send_limiter, ip_send_limiter
@@ -41,6 +45,34 @@ def _verify_google_token(id_token: str) -> dict | None:
             return json.loads(resp.read())
     except Exception:
         return None
+
+def _set_refresh_cookie(user: User, db: Session, response: Response) -> None:
+    """Issue a new refresh token, store its hash, and set an httpOnly cookie."""
+    # Opportunistic cleanup: remove expired refresh tokens for this user
+    db.query(RefreshToken).filter(
+        RefreshToken.user_id == user.user_id,
+        RefreshToken.expires_at < datetime.utcnow(),
+    ).delete()
+
+    raw_token = create_refresh_token()
+    stored = RefreshToken(
+        token_hash=hash_token(raw_token),
+        user_id=user.user_id,
+        expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+    db.add(stored)
+    db.commit()
+
+    is_production = os.getenv("ENVIRONMENT", "development") == "production"
+    response.set_cookie(
+        key="refresh_token",
+        value=raw_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/api/auth",
+    )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -135,7 +167,7 @@ def verify_code(data: VerifyCode, db: Session = Depends(get_db)):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(user_data: UserCreateVerified, db: Session = Depends(get_db)):
+def register(user_data: UserCreateVerified, response: Response, db: Session = Depends(get_db)):
     # Validate that the email was verified
     payload = verify_token(user_data.verification_token)
     if not payload or payload.get("verified_email") != user_data.email:
@@ -168,11 +200,10 @@ def register(user_data: UserCreateVerified, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": new_user.email, "user_id": str(new_user.user_id)},
-        expires_delta=access_token_expires,
     )
+    _set_refresh_cookie(new_user, db, response)
 
     return {
         "access_token": access_token,
@@ -182,7 +213,7 @@ def register(user_data: UserCreateVerified, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(user_data: UserLogin, db: Session = Depends(get_db)):
+def login(user_data: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == user_data.email).first()
 
     if not user or user.hashed_password is None or not verify_password(user_data.password, user.hashed_password):
@@ -192,17 +223,65 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email, "user_id": str(user.user_id)},
-        expires_delta=access_token_expires,
     )
+    _set_refresh_cookie(user, db, response)
 
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": user,
     }
+
+
+@router.post("/refresh")
+def refresh(request: Request, response: Response, db: Session = Depends(get_db)):
+    raw_token = request.cookies.get("refresh_token")
+    if not raw_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token")
+
+    stored = db.query(RefreshToken).filter(
+        RefreshToken.token_hash == hash_token(raw_token)
+    ).first()
+
+    if not stored or datetime.utcnow() > stored.expires_at:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
+
+    user = db.query(User).filter(User.user_id == stored.user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    # Token rotation: revoke old token, issue new one
+    db.delete(stored)
+    db.commit()
+
+    access_token = create_access_token(
+        data={"sub": user.email, "user_id": str(user.user_id)},
+    )
+    _set_refresh_cookie(user, db, response)
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+def logout(request: Request, response: Response, db: Session = Depends(get_db)):
+    raw_token = request.cookies.get("refresh_token")
+    if raw_token:
+        db.query(RefreshToken).filter(
+            RefreshToken.token_hash == hash_token(raw_token)
+        ).delete()
+        db.commit()
+
+    is_production = os.getenv("ENVIRONMENT", "development") == "production"
+    response.delete_cookie(
+        key="refresh_token",
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        path="/api/auth",
+    )
+    return {"message": "Logged out"}
 
 
 @router.post("/change-password")
@@ -312,7 +391,7 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/google", response_model=GoogleTokenResponse)
-def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
+def google_login(data: GoogleLogin, response: Response, db: Session = Depends(get_db)):
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     if not client_id:
         raise HTTPException(status_code=503, detail="Google authentication is not configured")
@@ -347,8 +426,8 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
 
     access_token = create_access_token(
         data={"sub": user.email, "user_id": str(user.user_id)},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
+    _set_refresh_cookie(user, db, response)
 
     return {
         "access_token": access_token,
