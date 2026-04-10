@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -14,11 +14,11 @@ import {
 import { ChevronRightIcon } from "lucide-react"
 
 interface Farm {
-  id: string
-  name: string
+  farm_id: string
+  farm_name: string
   owner: string
   location: string
-  biodiversityCredits: number
+  natureCredits: number
   income: number
   reliabilityScore: number
 }
@@ -38,9 +38,11 @@ function getReliabilityBadge(score: number) {
 }
 
 export function FarmsDataTable({ farms }: FarmsDataTableProps) {
+  const router = useRouter()
+
   return (
     <div className="px-4 lg:px-6">
-      <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-hidden rounded-lg border-2 border-blue-200 dark:border-blue-800">
         <Table>
           <TableHeader className="bg-muted">
             <TableRow>
@@ -55,27 +57,16 @@ export function FarmsDataTable({ farms }: FarmsDataTableProps) {
           </TableHeader>
           <TableBody>
             {farms.map((farm) => (
-              <TableRow key={farm.id} className="group cursor-pointer">
-                <TableCell>
-                  <Link
-                    href={`/manager-dashboard/farm/${farm.id}`}
-                    className="font-medium hover:underline cursor-pointer"
-                  >
-                    {farm.name}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {farm.owner}
-                </TableCell>
-                <TableCell className="hidden text-muted-foreground md:table-cell">
-                  {farm.location}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {farm.biodiversityCredits.toLocaleString()}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  &euro;{farm.income.toLocaleString()}
-                </TableCell>
+              <TableRow
+                key={farm.farm_id}
+                className="group cursor-pointer"
+                onClick={() => router.push(`/manager-dashboard/farm/${farm.farm_id}`)}
+              >
+                <TableCell className="font-medium">{farm.farm_name}</TableCell>
+                <TableCell className="text-muted-foreground">{farm.owner}</TableCell>
+                <TableCell className="hidden text-muted-foreground md:table-cell">{farm.location}</TableCell>
+                <TableCell className="text-right tabular-nums">{farm.natureCredits.toLocaleString()}</TableCell>
+                <TableCell className="text-right tabular-nums">&euro;{farm.income.toLocaleString()}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <span className="tabular-nums">{farm.reliabilityScore}%</span>
@@ -83,12 +74,7 @@ export function FarmsDataTable({ farms }: FarmsDataTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/manager-dashboard/farm/${farm.id}`}
-                    className="text-muted-foreground group-hover:text-foreground cursor-pointer"
-                  >
-                    <ChevronRightIcon className="size-4" />
-                  </Link>
+                  <ChevronRightIcon className="size-4 text-muted-foreground group-hover:text-foreground" />
                 </TableCell>
               </TableRow>
             ))}

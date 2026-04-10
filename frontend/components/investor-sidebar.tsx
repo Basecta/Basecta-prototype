@@ -8,6 +8,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/components/nav-user"
+import { logoutAuth } from "@/lib/auth-store"
 
 export function InvestorSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
@@ -20,8 +21,8 @@ export function InvestorSidebar({ ...props }: React.ComponentProps<typeof Sideba
     }
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem("token")
+  const handleLogout = async () => {
+    await logoutAuth()
     localStorage.removeItem("user")
     router.push("/")
   }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { uploadFile } from '@/lib/api';
+import { initAuth } from '@/lib/auth-store';
 import { useData } from '@/lib/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadIcon, CheckCircleIcon, XCircleIcon, LoaderIcon } from 'lucide-react';
@@ -46,15 +47,13 @@ export default function DataUploadPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-
-    if (!token || !userData) {
-      router.push('/login');
-      return;
-    }
-
-    setUser(JSON.parse(userData));
+    const init = async () => {
+      const token = await initAuth();
+      const userData = localStorage.getItem('user');
+      if (!token || !userData) { router.push('/login'); return; }
+      setUser(JSON.parse(userData));
+    };
+    init();
   }, [router]);
 
   const handleFileSelect = async (file: File, category: 'hedgerows' | 'waterways' | 'soil') => {
