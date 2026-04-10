@@ -28,6 +28,9 @@ import { getNotifications } from "@/lib/api"
 export function NavUser({
   user,
   onLogout,
+  fetchNotifications = getNotifications,
+  notificationsHref = "/notifications",
+  settingsHref = "/settings",
 }: {
   user: {
     name: string
@@ -35,15 +38,18 @@ export function NavUser({
     avatar: string
   }
   onLogout?: () => void
+  fetchNotifications?: () => Promise<any[]>
+  notificationsHref?: string
+  settingsHref?: string
 }) {
   const { isMobile } = useSidebar()
   const [notifCount, setNotifCount] = useState(0)
 
   useEffect(() => {
-    getNotifications()
+    fetchNotifications()
       .then((data: any[]) => setNotifCount(data.filter((n: any) => !n.read).length))
       .catch(() => {})
-  }, [])
+  }, [fetchNotifications])
 
   const initials = user.name
     .split(" ")
@@ -103,7 +109,7 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/notifications" />}>
+            <DropdownMenuItem render={<Link href={notificationsHref} />}>
               <div className="flex items-center gap-2 flex-1">
                 <BellIcon className="size-4" />
                 <span>Notifications</span>
@@ -114,7 +120,7 @@ export function NavUser({
                 )}
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/settings" />}>
+            <DropdownMenuItem render={<Link href={settingsHref} />}>
               <SettingsIcon />
               Settings
             </DropdownMenuItem>

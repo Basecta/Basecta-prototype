@@ -8,7 +8,10 @@ from app.models import notification as _notification_models  # noqa: F401
 from app.models import pending_verification as _pending_verification_models  # noqa: F401
 from app.models import password_reset_token as _password_reset_token_models  # noqa: F401
 from app.models import refresh_token as _refresh_token_models  # noqa: F401
-from app.api import auth, upload, survey, dashboard, notifications
+from app.models import staff_user as _staff_user_models  # noqa: F401
+from app.models import staff_refresh_token as _staff_refresh_token_models  # noqa: F401
+from app.models import staff_notification as _staff_notification_models  # noqa: F401
+from app.api import auth, upload, survey, dashboard, notifications, staff_auth, staff_notifications
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -74,6 +77,8 @@ app.include_router(upload.router)
 app.include_router(survey.router)
 app.include_router(dashboard.router)
 app.include_router(notifications.router)
+app.include_router(staff_auth.router)
+app.include_router(staff_notifications.router)
 
 @app.get("/")
 def read_root():

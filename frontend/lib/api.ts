@@ -1,4 +1,5 @@
 import { getAccessToken, refreshAccessToken, setAccessToken } from './auth-store';
+import { getStaffAccessToken, refreshStaffAccessToken } from './staff-auth-store';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -162,6 +163,81 @@ export async function markNotificationRead(id: string) {
 export async function dismissNotification(id: string) {
   return apiRequest(`/api/notifications/${id}`, { method: 'DELETE' });
 }
+
+// ---------------------------------------------------------------------------
+// Staff auth
+// ---------------------------------------------------------------------------
+
+function buildStaffHeaders(overrides?: HeadersInit): HeadersInit {
+  const token = getStaffAccessToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...overrides,
+  };
+}
+
+async function staffFetch(endpoint: string, options?: RequestInit): Promise<Response> {
+  return fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    credentials: 'include',
+    headers: buildStaffHeaders(options?.headers),
+  });
+}
+
+export async function staffApiRequest(endpoint: string, options?: RequestInit) {
+  let response = await staffFetch(endpoint, options);
+
+  if (response.status === 401) {
+    const newToken = await refreshStaffAccessToken();
+    if (newToken) {
+      response = await staffFetch(endpoint, options);
+    } else if (typeof window !== 'undefined') {
+      window.location.href = '/staff/login';
+      throw new Error('Session expired. Please log in again.');
+    }
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const detail = data.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((e: any) => e.msg?.replace(/^Value error, /, '') ?? 'Validation error').join('. ')
+      : detail || 'An error occurred';
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+export async function staffLogin(email: string, password: string) {
+  return staffApiRequest('/api/staff/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function getStaffNotifications() {
+  return staffApiRequest('/api/staff/notifications');
+}
+
+export async function markStaffNotificationRead(id: string) {
+  return staffApiRequest(`/api/staff/notifications/${id}/read`, { method: 'PATCH' });
+}
+
+export async function dismissStaffNotification(id: string) {
+  return staffApiRequest(`/api/staff/notifications/${id}`, { method: 'DELETE' });
+}
+
+export async function changeStaffPassword(currentPassword: string, newPassword: string) {
+  return staffApiRequest('/api/staff/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+// ---------------------------------------------------------------------------
 
 export async function uploadFile(file: File, category: string) {
   const token = getAccessToken();

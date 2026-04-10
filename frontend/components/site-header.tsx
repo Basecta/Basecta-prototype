@@ -26,14 +26,29 @@ function SidebarTriggerWithBadge() {
   )
 }
 
-export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?: boolean }) {
+export function SiteHeader({
+  showSidebarTrigger = true,
+  showNotifications = true,
+  title = "Basecta",
+  logoHref = "/hub",
+}: {
+  showSidebarTrigger?: boolean
+  showNotifications?: boolean
+  title?: string
+  logoHref?: string
+}) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-(--header-height) items-center gap-2 border-b bg-background">
       <div className="flex w-full items-center gap-2 px-4 lg:px-6">
-        {showSidebarTrigger ? <SidebarTriggerWithBadge /> : <div className="size-9 -ml-1" />}
-        <Link href="/hub" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        {showSidebarTrigger
+          ? showNotifications
+            ? <SidebarTriggerWithBadge />
+            : <SidebarTrigger className="-ml-1" />
+          : <div className="size-9 -ml-1" />
+        }
+        <Link href={logoHref} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Image src="/basecta_logo_notext.png" alt="Basecta logo" width={28} height={28} />
-          <h1 className="text-base font-semibold">Basecta</h1>
+          <h1 className="text-base font-semibold">{title}</h1>
         </Link>
       </div>
     </header>
