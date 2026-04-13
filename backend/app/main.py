@@ -14,12 +14,12 @@ from app.models import staff_refresh_token as _staff_refresh_token_models  # noq
 from app.models import staff_notification as _staff_notification_models  # noqa: F401
 from app.api import auth, upload, survey, dashboard, notifications, staff_auth, staff_notifications
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
-
-# PostgreSQL trigger: whenever a row is inserted into `farms`, automatically
-# create a matching row in `farm_dashboards` with dashboard_name = farm name.
-# CREATE OR REPLACE makes this idempotent on every restart.
+# Tables are managed by Alembic migrations (see alembic/ directory).
+# Run `python -m alembic upgrade head` to apply pending migrations.
+#
+# The farm_dashboards trigger below is kept here because it's a runtime
+# database behaviour (not a schema change) — it auto-creates a dashboard
+# nickname row whenever a new farm is inserted.
 _TRIGGER_SQL = """
 CREATE OR REPLACE FUNCTION fn_create_farm_dashboard()
 RETURNS TRIGGER AS $$
@@ -38,37 +38,8 @@ AFTER INSERT ON farms
 FOR EACH ROW EXECUTE FUNCTION fn_create_farm_dashboard();
 """
 
-_PENDING_UNIQUE_SQL = """
--- Remove any duplicate pending verifications, keeping the most recent per email
-DELETE FROM pending_verifications p1
-USING pending_verifications p2
-WHERE p1.email = p2.email AND p1.created_at < p2.created_at;
-
--- Add unique constraint on email if it doesn't already exist
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'uq_pending_verifications_email'
-    ) THEN
-        ALTER TABLE pending_verifications
-        ADD CONSTRAINT uq_pending_verifications_email UNIQUE (email);
-    END IF;
-END $$;
-"""
-
-# Idempotent migration: add description fields to the farms table so existing
-# databases pick them up without a full Alembic migration flow.
-_FARM_DESCRIPTION_COLUMNS_SQL = """
-ALTER TABLE farms ADD COLUMN IF NOT EXISTS asset_type VARCHAR;
-ALTER TABLE farms ADD COLUMN IF NOT EXISTS size_hectares DOUBLE PRECISION;
-ALTER TABLE farms ADD COLUMN IF NOT EXISTS region VARCHAR;
-ALTER TABLE farms ADD COLUMN IF NOT EXISTS description TEXT;
-"""
-
 with engine.connect() as conn:
     conn.execute(text(_TRIGGER_SQL))
-    conn.execute(text(_PENDING_UNIQUE_SQL))
-    conn.execute(text(_FARM_DESCRIPTION_COLUMNS_SQL))
     conn.commit()
 
 app = FastAPI(title="Biodiversity Farm API")
