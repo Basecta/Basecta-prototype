@@ -365,7 +365,7 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         PasswordResetToken.token == data.token
     ).first()
 
-    if not reset_token or reset_token.used or datetime.utcnow() > reset_token.expires_at:
+    if not reset_token or datetime.utcnow() > reset_token.expires_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This reset link is invalid or has expired. Please request a new one."

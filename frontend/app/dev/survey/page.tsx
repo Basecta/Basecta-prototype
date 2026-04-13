@@ -11,7 +11,6 @@ export default function SurveyDevPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-indigo-100">
       <OnboardingSurvey
         key={key}
-        token=""
         onComplete={restart}
         onSkip={restart}
         devMode

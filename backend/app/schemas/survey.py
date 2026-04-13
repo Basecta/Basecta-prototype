@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 from typing import Any
 from datetime import datetime
@@ -8,7 +10,7 @@ class SurveyCreate(BaseModel):
 
 
 class SurveyResponseOut(BaseModel):
-    user_id: int
+    user_id: UUID
     responses: dict[str, Any]
     completed_at: datetime
 
