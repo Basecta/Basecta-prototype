@@ -19,6 +19,7 @@ import {
   RulerIcon,
   TagIcon,
   GlobeIcon,
+  ArrowLeftIcon,
 } from 'lucide-react';
 
 interface FarmData {
@@ -178,6 +179,17 @@ export default function FarmDashboardPage() {
 
   return (
     <>
+      {/* Back to Hub */}
+      <div className="px-4 lg:px-6">
+        <Link
+          href="/hub"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeftIcon className="size-4" />
+          Back to Hub
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="px-4 lg:px-6">
         <Card className="ring-0 border-2 border-emerald-200 dark:border-emerald-800">
@@ -334,27 +346,13 @@ export default function FarmDashboardPage() {
         {!farm.has_evaluation_request ? (
           <Link
             href={`/dashboard/${farm.farm_id}/request-evaluation`}
-            className="group block w-full rounded-2xl border-2 border-yellow-400 dark:border-yellow-500 bg-gradient-to-r from-yellow-300 to-amber-300 dark:from-yellow-500 dark:to-amber-500 shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 px-6 py-5"
+            className="group inline-flex items-center gap-3 rounded-xl border-2 border-yellow-400 dark:border-yellow-500 bg-gradient-to-r from-yellow-300 to-amber-300 dark:from-yellow-500 dark:to-amber-500 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 px-4 py-3"
           >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="shrink-0 rounded-xl bg-yellow-500/20 dark:bg-yellow-900/30 p-3">
-                  <SparklesIcon className="size-7 text-yellow-900 dark:text-yellow-50" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-yellow-900 dark:text-yellow-50">
-                    Request Evaluation and Analysis of Asset for Nature Credits
-                  </h3>
-                  <p className="text-sm text-yellow-900/80 dark:text-yellow-50/90">
-                    Send this asset to an ecologist for on-site survey and nature-credit assessment.
-                  </p>
-                </div>
-              </div>
-              <div className="shrink-0 hidden sm:flex items-center gap-1 text-sm font-semibold text-yellow-900 dark:text-yellow-50">
-                Start
-                <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
-              </div>
-            </div>
+            <SparklesIcon className="size-5 text-yellow-900 dark:text-yellow-50 shrink-0" />
+            <span className="text-sm font-bold text-yellow-900 dark:text-yellow-50">
+              Request Evaluation &amp; Analysis for Nature Credits
+            </span>
+            <span aria-hidden className="text-yellow-900/60 dark:text-yellow-50/60 transition-transform group-hover:translate-x-0.5">→</span>
           </Link>
         ) : (
           <div className="w-full rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-6 py-4">
