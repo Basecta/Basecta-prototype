@@ -1,15 +1,15 @@
 from pydantic import BaseModel
-from typing import Any, Dict
+from typing import Any
 from datetime import datetime
 
 
 class SurveyCreate(BaseModel):
-    responses: Dict[str, Any]
+    responses: dict[str, Any]
 
 
 class SurveyResponseOut(BaseModel):
     user_id: int
-    responses: Dict[str, Any]
+    responses: dict[str, Any]
     completed_at: datetime
 
     class Config:

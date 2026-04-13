@@ -74,7 +74,7 @@ def main() -> None:
         db.commit()
         db.refresh(staff)
 
-        print(f"\n  Staff account created.")
+        print("\n  Staff account created.")
         print(f"  ID:    {staff.staff_id}")
         print(f"  Name:  {staff.full_name}")
         print(f"  Email: {staff.email}")

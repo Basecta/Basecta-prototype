@@ -1,0 +1,21 @@
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+]
+ignore = [
+    "E501",  # line too long — handled by formatter
+    "B008",  # Depends() in defaults — standard FastAPI pattern
+    "I001",  # import sorting — too noisy to enforce on existing code right now
+]
+
+[lint.per-file-ignores]
+"alembic/**" = ["E402", "I001", "F401", "UP007", "UP035", "W291"]  # alembic auto-generated files
+"seed_admin.py" = ["E402"]  # late imports after load_dotenv() are intentional

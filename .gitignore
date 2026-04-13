@@ -6,6 +6,8 @@ backend/*.pyc
 backend/.env
 backend/app.db
 backend/uploads/
+backend/virtualenv
+
 
 # Node
 frontend/node_modules/

@@ -2,7 +2,6 @@ import bcrypt
 import hashlib
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from typing import Optional
 import secrets
 import os
 from dotenv import load_dotenv
@@ -26,7 +25,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     hashed_bytes = hashed_password.encode('utf-8')
     return bcrypt.checkpw(password_bytes, hashed_bytes)
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta

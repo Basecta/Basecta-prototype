@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from app.database import engine, Base
+from app.database import engine
 from app.models import survey as _survey_models        # noqa: F401
 from app.models import dashboard as _dashboard_models  # noqa: F401
 from app.models import evaluation_request as _evaluation_request_models  # noqa: F401

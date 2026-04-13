@@ -14,7 +14,6 @@ from app.models.refresh_token import RefreshToken
 from app.schemas.user import (
     UserCreateVerified,
     UserLogin,
-    UserResponse,
     TokenResponse,
     PasswordChange,
     GoogleLogin,
@@ -32,7 +31,6 @@ from app.utils.security import (
     hash_token,
     verify_token,
     generate_reset_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_DAYS,
 )
 from app.utils.email import send_verification_code, send_password_reset_email

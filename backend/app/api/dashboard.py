@@ -1,8 +1,6 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import List, Optional
 from pydantic import BaseModel
 from app.database import get_db
 from app.models.dashboard import Farm, FarmDashboard, ManagerDashboard, ManagerDashboardFarm
@@ -56,7 +54,7 @@ def _to_farm_out(farm: Farm, nickname: str | None, has_eval: bool = False) -> di
     }
 
 
-@router.get("/farms", response_model=List[FarmOut])
+@router.get("/farms", response_model=list[FarmOut])
 def get_farms(authorization: str = Header(None), db: Session = Depends(get_db)):
     user_id = _get_user_id(authorization)
     rows = (
@@ -218,7 +216,7 @@ def create_evaluation_request(
 
 @router.get(
     "/farms/{farm_id}/evaluation-request",
-    response_model=Optional[EvaluationRequestOut],
+    response_model=EvaluationRequestOut | None,
 )
 def get_latest_evaluation_request(
     farm_id: UUID,
@@ -270,10 +268,10 @@ def _build_manager_out(md: ManagerDashboard, db: Session) -> dict:
 
 class ManagerDashboardCreate(BaseModel):
     dashboard_name: str
-    farm_ids: List[UUID] = []
+    farm_ids: list[UUID] = []
 
 
-@router.get("/manager", response_model=List[ManagerDashboardOut])
+@router.get("/manager", response_model=list[ManagerDashboardOut])
 def get_manager_dashboards(authorization: str = Header(None), db: Session = Depends(get_db)):
     user_id = _get_user_id(authorization)
     dashboards = db.query(ManagerDashboard).filter(ManagerDashboard.user_id == user_id).all()
