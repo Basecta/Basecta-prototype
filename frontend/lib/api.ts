@@ -212,9 +212,43 @@ export async function staffApiRequest(endpoint: string, options?: RequestInit) {
 }
 
 export async function staffLogin(email: string, password: string) {
-  return staffApiRequest('/api/staff/auth/login', {
+  // Use a raw fetch — the login endpoint's 401 means wrong credentials, not an expired session,
+  // so we must not trigger the refresh-and-retry logic inside staffApiRequest.
+  const response = await fetch(`${API_URL}/api/staff/auth/login`, {
     method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const detail = data.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((e: any) => e.msg?.replace(/^Value error, /, '') ?? 'Validation error').join('. ')
+      : detail || 'An error occurred';
+    throw new Error(message);
+  }
+  return data;
+}
+
+export async function staffSetupPassword(setupToken: string, newPassword: string) {
+  return staffApiRequest('/api/staff/auth/setup/set-password', {
+    method: 'POST',
+    body: JSON.stringify({ setup_token: setupToken, new_password: newPassword }),
+  });
+}
+
+export async function staffSetupConfirmTotp(setupToken: string, totpCode: string) {
+  return staffApiRequest('/api/staff/auth/setup/confirm-totp', {
+    method: 'POST',
+    body: JSON.stringify({ setup_token: setupToken, totp_code: totpCode }),
+  });
+}
+
+export async function staffTotpValidate(mfaToken: string, totpCode: string) {
+  return staffApiRequest('/api/staff/auth/totp/validate', {
+    method: 'POST',
+    body: JSON.stringify({ mfa_token: mfaToken, totp_code: totpCode }),
   });
 }
 
@@ -234,6 +268,17 @@ export async function changeStaffPassword(currentPassword: string, newPassword: 
   return staffApiRequest('/api/staff/auth/change-password', {
     method: 'POST',
     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+export async function getStaffUsers() {
+  return staffApiRequest('/api/staff/auth/users');
+}
+
+export async function createStaffUser(email: string, fullName: string, role: string) {
+  return staffApiRequest('/api/staff/auth/create', {
+    method: 'POST',
+    body: JSON.stringify({ email, full_name: fullName, role }),
   });
 }
 

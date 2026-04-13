@@ -18,7 +18,7 @@ export function StaffDashboardClientLayout({
         } as React.CSSProperties
       }
     >
-      <SiteHeader showNotifications={false} title="Basecta Staff Portal" logoHref="/staff-dashboard" />
+      <SiteHeader showNotifications={false} title="Basecta Staff Portal" logoHref="/staff/dashboard" />
       <StaffSidebar variant="inset" />
       <SidebarInset className="pt-(--header-height)">
         <div className="flex flex-1 flex-col">

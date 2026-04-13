@@ -20,10 +20,10 @@ import { getStaffNotifications } from "@/lib/api"
 import { LayoutDashboardIcon, LeafIcon, ClipboardListIcon, UsersIcon, SettingsIcon } from "lucide-react"
 
 const NAV_ITEMS: { label: string; href: string; icon: React.ElementType; roles: string[] }[] = [
-  { label: "Dashboard", href: "/staff-dashboard", icon: LayoutDashboardIcon, roles: ["admin", "ecologist", "surveyor"] },
-  { label: "Surveys", href: "/staff-dashboard/surveys", icon: ClipboardListIcon, roles: ["admin", "ecologist", "surveyor"] },
-  { label: "Biodiversity Data", href: "/staff-dashboard/biodiversity", icon: LeafIcon, roles: ["admin", "ecologist"] },
-  { label: "Users", href: "/staff-dashboard/users", icon: UsersIcon, roles: ["admin"] },
+  { label: "Dashboard", href: "/staff/dashboard", icon: LayoutDashboardIcon, roles: ["admin", "ecologist", "surveyor"] },
+  { label: "Surveys", href: "/staff/surveys", icon: ClipboardListIcon, roles: ["admin", "ecologist", "surveyor"] },
+  { label: "Biodiversity Data", href: "/staff/biodiversity", icon: LeafIcon, roles: ["admin", "ecologist"] },
+  { label: "Users", href: "/staff/users", icon: UsersIcon, roles: ["admin"] },
 ]
 
 export function StaffSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -73,8 +73,8 @@ export function StaffSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
           }}
           onLogout={handleLogout}
           fetchNotifications={getStaffNotifications}
-          notificationsHref="/staff-dashboard/notifications"
-          settingsHref="/staff-dashboard/settings"
+          notificationsHref="/staff/notifications"
+          settingsHref="/staff/settings"
         />
       </SidebarFooter>
     </Sidebar>

@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Optional
 import secrets
+import string
 import os
+import pyotp
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -53,3 +55,28 @@ def hash_token(token: str) -> str:
 
 def generate_reset_token() -> str:
     return secrets.token_urlsafe(32)
+
+def generate_temp_password() -> str:
+    """Generate a secure 12-character temporary password meeting all complexity requirements."""
+    specials = "!@#$-_"
+    alphabet = string.ascii_letters + string.digits + specials
+    while True:
+        pwd = ''.join(secrets.choice(alphabet) for _ in range(12))
+        if (
+            any(c.isupper() for c in pwd)
+            and any(c.islower() for c in pwd)
+            and any(c.isdigit() for c in pwd)
+            and any(c in specials for c in pwd)
+        ):
+            return pwd
+
+def generate_totp_secret() -> str:
+    return pyotp.random_base32()
+
+def get_totp_uri(secret: str, email: str) -> str:
+    totp = pyotp.TOTP(secret)
+    return totp.provisioning_uri(name=email, issuer_name="Basecta Staff Portal")
+
+def verify_totp_code(secret: str, code: str) -> bool:
+    totp = pyotp.TOTP(secret)
+    return totp.verify(code, valid_window=1)

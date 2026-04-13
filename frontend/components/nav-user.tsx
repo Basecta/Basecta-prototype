@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 import {
   Avatar,
   AvatarFallback,
@@ -44,12 +45,19 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const [notifCount, setNotifCount] = useState(0)
+  const pathname = usePathname()
 
   useEffect(() => {
-    fetchNotifications()
-      .then((data: any[]) => setNotifCount(data.filter((n: any) => !n.read).length))
-      .catch(() => {})
-  }, [fetchNotifications])
+    const refresh = () => {
+      fetchNotifications()
+        .then((data: any[]) => setNotifCount(data.filter((n: any) => !n.read).length))
+        .catch(() => {})
+    }
+
+    refresh()
+    const interval = setInterval(refresh, 30_000)
+    return () => clearInterval(interval)
+  }, [fetchNotifications, pathname])
 
   const initials = user.name
     .split(" ")

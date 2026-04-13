@@ -15,23 +15,7 @@ class StaffLogin(BaseModel):
 class StaffCreate(BaseModel):
     email: EmailStr
     full_name: str
-    password: str
     role: Literal["admin", "ecologist", "surveyor"]
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one number")
-        if not re.search(r"[!@#$%^&*()\-_=+\[\]{};:'\",.<>?/\\|`~]", v):
-            raise ValueError("Password must contain at least one special character")
-        return v
 
     @field_validator("full_name")
     @classmethod
@@ -47,6 +31,19 @@ class StaffResponse(BaseModel):
     full_name: str
     role: str
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class StaffListResponse(BaseModel):
+    staff_id: UUID
+    email: str
+    full_name: str
+    role: str
+    created_at: datetime
+    account_setup_complete: bool
+    totp_enabled: bool
 
     class Config:
         from_attributes = True
@@ -76,3 +73,33 @@ class PasswordChange(BaseModel):
         if not re.search(r"[!@#$%^&*()\-_=+\[\]{};:'\",.<>?/\\|`~]", v):
             raise ValueError("Password must contain at least one special character")
         return v
+
+
+class SetupSetPassword(BaseModel):
+    setup_token: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"[a-z]", v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r"\d", v):
+            raise ValueError("Password must contain at least one number")
+        if not re.search(r"[!@#$%^&*()\-_=+\[\]{};:'\",.<>?/\\|`~]", v):
+            raise ValueError("Password must contain at least one special character")
+        return v
+
+
+class SetupConfirmTotp(BaseModel):
+    setup_token: str
+    totp_code: str
+
+
+class TotpValidate(BaseModel):
+    mfa_token: str
+    totp_code: str
