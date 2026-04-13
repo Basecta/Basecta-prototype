@@ -4,6 +4,7 @@ from sqlalchemy import text
 from app.database import engine, Base
 from app.models import survey as _survey_models        # noqa: F401
 from app.models import dashboard as _dashboard_models  # noqa: F401
+from app.models import evaluation_request as _evaluation_request_models  # noqa: F401
 from app.models import notification as _notification_models  # noqa: F401
 from app.models import pending_verification as _pending_verification_models  # noqa: F401
 from app.models import password_reset_token as _password_reset_token_models  # noqa: F401
@@ -55,9 +56,19 @@ BEGIN
 END $$;
 """
 
+# Idempotent migration: add description fields to the farms table so existing
+# databases pick them up without a full Alembic migration flow.
+_FARM_DESCRIPTION_COLUMNS_SQL = """
+ALTER TABLE farms ADD COLUMN IF NOT EXISTS asset_type VARCHAR;
+ALTER TABLE farms ADD COLUMN IF NOT EXISTS size_hectares DOUBLE PRECISION;
+ALTER TABLE farms ADD COLUMN IF NOT EXISTS region VARCHAR;
+ALTER TABLE farms ADD COLUMN IF NOT EXISTS description TEXT;
+"""
+
 with engine.connect() as conn:
     conn.execute(text(_TRIGGER_SQL))
     conn.execute(text(_PENDING_UNIQUE_SQL))
+    conn.execute(text(_FARM_DESCRIPTION_COLUMNS_SQL))
     conn.commit()
 
 app = FastAPI(title="Biodiversity Farm API")

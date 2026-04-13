@@ -152,6 +152,43 @@ export async function getFarmById(id: string) {
   return apiRequest(`/api/dashboard/farms/${id}`);
 }
 
+export interface CreateFarmPayload {
+  farm_name: string;
+  location: string;
+  asset_type?: string | null;
+  size_hectares?: number | null;
+  region?: string | null;
+  description?: string | null;
+}
+
+export async function createFarm(payload: CreateFarmPayload) {
+  return apiRequest('/api/dashboard/farms', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateFarm(farmId: string, payload: Partial<CreateFarmPayload>) {
+  return apiRequest(`/api/dashboard/farms/${farmId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function submitEvaluationRequest(
+  farmId: string,
+  responses: Record<string, unknown>,
+) {
+  return apiRequest(`/api/dashboard/farms/${farmId}/evaluation-request`, {
+    method: 'POST',
+    body: JSON.stringify({ responses }),
+  });
+}
+
+export async function getLatestEvaluationRequest(farmId: string) {
+  return apiRequest(`/api/dashboard/farms/${farmId}/evaluation-request`);
+}
+
 export async function getNotifications() {
   return apiRequest('/api/notifications');
 }

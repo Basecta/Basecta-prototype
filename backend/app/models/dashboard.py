@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, Float, String, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Float, String, ForeignKey, UniqueConstraint, Text
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -11,9 +11,16 @@ class Farm(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False, index=True)
     farm_name = Column(String, nullable=False)
     location = Column(String, nullable=False)
-    nature_credits = Column(Float, nullable=False)
-    income = Column(Float, nullable=False)
-    reliability_score = Column(Float, nullable=False)
+    nature_credits = Column(Float, nullable=False, default=0.0)
+    income = Column(Float, nullable=False, default=0.0)
+    reliability_score = Column(Float, nullable=False, default=0.0)
+
+    # Asset description fields — added for asset-creation flow. All nullable so
+    # existing rows (and the DB-level trigger) keep working unchanged.
+    asset_type = Column(String, nullable=True)        # e.g. Farm / Woodland / Wetland / Mixed / Other
+    size_hectares = Column(Float, nullable=True)
+    region = Column(String, nullable=True)            # free-text region / country
+    description = Column(Text, nullable=True)
 
 
 class FarmDashboard(Base):

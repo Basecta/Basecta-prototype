@@ -440,19 +440,19 @@ export default function HubPage() {
 
         {/* Create new dashboard — always visible */}
         <div className="h-full">
-          <button
-            disabled
+          <Link
+            href="/hub/create"
             data-hub-tile
-            className="group flex flex-col gap-6 p-8 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm opacity-60 cursor-not-allowed text-left w-full h-full"
-                     >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-              <Plus className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            className="group flex flex-col gap-6 p-8 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md transition-all duration-200 text-left w-full h-full"
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors">
+              <Plus className="w-6 h-6 text-gray-500 dark:text-gray-400" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1">Create New Dashboard</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">Set up a new farm, manager, or investor dashboard.</p>
             </div>
-          </button>
+          </Link>
         </div>
 
       </div>

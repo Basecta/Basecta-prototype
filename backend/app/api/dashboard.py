@@ -2,11 +2,19 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from app.database import get_db
 from app.models.dashboard import Farm, FarmDashboard, ManagerDashboard, ManagerDashboardFarm
-from app.schemas.dashboard import FarmOut, ManagerDashboardOut
+from app.models.evaluation_request import EvaluationRequest
+from app.schemas.dashboard import (
+    FarmOut,
+    FarmCreate,
+    FarmUpdate,
+    ManagerDashboardOut,
+    EvaluationRequestCreate,
+    EvaluationRequestOut,
+)
 from app.utils.security import verify_token
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
@@ -21,7 +29,16 @@ def _get_user_id(authorization: str | None) -> UUID:
     return UUID(payload["user_id"])
 
 
-def _to_farm_out(farm: Farm, nickname: str | None) -> dict:
+def _has_evaluation_request(db: Session, farm_id: UUID) -> bool:
+    return (
+        db.query(EvaluationRequest)
+        .filter(EvaluationRequest.farm_id == farm_id)
+        .first()
+        is not None
+    )
+
+
+def _to_farm_out(farm: Farm, nickname: str | None, has_eval: bool = False) -> dict:
     return {
         "farm_id": farm.farm_id,
         "user_id": farm.user_id,
@@ -31,6 +48,11 @@ def _to_farm_out(farm: Farm, nickname: str | None) -> dict:
         "nature_credits": farm.nature_credits,
         "income": farm.income,
         "reliability_score": farm.reliability_score,
+        "asset_type": farm.asset_type,
+        "size_hectares": farm.size_hectares,
+        "region": farm.region,
+        "description": farm.description,
+        "has_evaluation_request": has_eval,
     }
 
 
@@ -43,7 +65,10 @@ def get_farms(authorization: str = Header(None), db: Session = Depends(get_db)):
         .filter(Farm.user_id == user_id)
         .all()
     )
-    return [_to_farm_out(farm, nickname) for farm, nickname in rows]
+    return [
+        _to_farm_out(farm, nickname, _has_evaluation_request(db, farm.farm_id))
+        for farm, nickname in rows
+    ]
 
 
 @router.get("/farms/{farm_id}", response_model=FarmOut)
@@ -58,7 +83,46 @@ def get_farm(farm_id: UUID, authorization: str = Header(None), db: Session = Dep
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Farm not found")
     farm, nickname = row
-    return _to_farm_out(farm, nickname)
+    return _to_farm_out(farm, nickname, _has_evaluation_request(db, farm.farm_id))
+
+
+@router.post("/farms", response_model=FarmOut, status_code=status.HTTP_201_CREATED)
+def create_farm(
+    body: FarmCreate,
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Create a new asset for the current user.
+
+    Metric fields (nature_credits, income, reliability_score) are initialised
+    to zero — they'll be populated later via the ecological evaluation flow.
+    The DB trigger `trg_create_farm_dashboard` automatically inserts a matching
+    farm_dashboards row using farm_name as the default dashboard name.
+    """
+    user_id = _get_user_id(authorization)
+
+    farm = Farm(
+        user_id=user_id,
+        farm_name=body.farm_name.strip(),
+        location=body.location.strip(),
+        nature_credits=0.0,
+        income=0.0,
+        reliability_score=0.0,
+        asset_type=body.asset_type.strip() if body.asset_type else None,
+        size_hectares=body.size_hectares,
+        region=body.region.strip() if body.region else None,
+        description=body.description.strip() if body.description else None,
+    )
+    db.add(farm)
+    db.commit()
+    db.refresh(farm)
+
+    nickname = (
+        db.query(FarmDashboard.farm_dashboard_name)
+        .filter(FarmDashboard.farm_id == farm.farm_id)
+        .scalar()
+    )
+    return _to_farm_out(farm, nickname, has_eval=False)
 
 
 class DashboardNameUpdate(BaseModel):
@@ -86,6 +150,95 @@ def update_dashboard_name(
     dashboard.farm_dashboard_name = body.dashboard_name.strip()
     db.commit()
     return {"farm_dashboard_name": dashboard.farm_dashboard_name}
+
+
+@router.patch("/farms/{farm_id}", response_model=FarmOut)
+def update_farm(
+    farm_id: UUID,
+    body: FarmUpdate,
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Update the editable description fields of an asset."""
+    user_id = _get_user_id(authorization)
+
+    farm = db.query(Farm).filter(Farm.farm_id == farm_id, Farm.user_id == user_id).first()
+    if not farm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Farm not found")
+
+    data = body.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        if isinstance(value, str):
+            value = value.strip()
+        setattr(farm, field, value)
+
+    db.commit()
+    db.refresh(farm)
+
+    nickname = (
+        db.query(FarmDashboard.farm_dashboard_name)
+        .filter(FarmDashboard.farm_id == farm.farm_id)
+        .scalar()
+    )
+    return _to_farm_out(farm, nickname, _has_evaluation_request(db, farm.farm_id))
+
+
+# ── Evaluation requests ───────────────────────────────────────────────────────
+
+
+@router.post(
+    "/farms/{farm_id}/evaluation-request",
+    response_model=EvaluationRequestOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_evaluation_request(
+    farm_id: UUID,
+    body: EvaluationRequestCreate,
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Submit a request for an ecologist to evaluate this asset."""
+    user_id = _get_user_id(authorization)
+
+    farm = db.query(Farm).filter(Farm.farm_id == farm_id, Farm.user_id == user_id).first()
+    if not farm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Farm not found")
+
+    req = EvaluationRequest(
+        farm_id=farm_id,
+        user_id=user_id,
+        responses=body.responses,
+        status="pending",
+    )
+    db.add(req)
+    db.commit()
+    db.refresh(req)
+    return req
+
+
+@router.get(
+    "/farms/{farm_id}/evaluation-request",
+    response_model=Optional[EvaluationRequestOut],
+)
+def get_latest_evaluation_request(
+    farm_id: UUID,
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
+    """Return the most recent evaluation request for this asset, or null."""
+    user_id = _get_user_id(authorization)
+
+    farm = db.query(Farm).filter(Farm.farm_id == farm_id, Farm.user_id == user_id).first()
+    if not farm:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Farm not found")
+
+    req = (
+        db.query(EvaluationRequest)
+        .filter(EvaluationRequest.farm_id == farm_id)
+        .order_by(EvaluationRequest.created_at.desc())
+        .first()
+    )
+    return req
 
 
 # ── Manager dashboard helpers ─────────────────────────────────────────────────
