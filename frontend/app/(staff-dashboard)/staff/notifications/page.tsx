@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { initStaffAuth } from '@/lib/staff-auth-store';
 import { getStaffNotifications, markStaffNotificationRead, dismissStaffNotification } from '@/lib/api';
+import { useStaffNotifications } from '@/lib/staff-notification-context';
 import { BellIcon } from 'lucide-react';
 
 interface StaffNotification {
@@ -19,6 +20,7 @@ interface StaffNotification {
 
 export default function StaffNotificationsPage() {
   const router = useRouter();
+  const { refresh: refreshBadge } = useStaffNotifications();
   const [notifications, setNotifications] = useState<StaffNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,11 +40,13 @@ export default function StaffNotificationsPage() {
   const handleRead = async (id: string) => {
     await markStaffNotificationRead(id).catch(() => {});
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    refreshBadge();
   };
 
   const handleDismiss = async (id: string) => {
     await dismissStaffNotification(id).catch(() => {});
     setNotifications(prev => prev.filter(n => n.id !== id));
+    refreshBadge();
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;

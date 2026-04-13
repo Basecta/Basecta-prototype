@@ -17,6 +17,7 @@ import {
 import { NavUser } from "@/components/nav-user"
 import { logoutStaffAuth } from "@/lib/staff-auth-store"
 import { getStaffNotifications } from "@/lib/api"
+import { useStaffNotifications } from "@/lib/staff-notification-context"
 import { LayoutDashboardIcon, LeafIcon, ClipboardListIcon, UsersIcon, SettingsIcon } from "lucide-react"
 
 const NAV_ITEMS: { label: string; href: string; icon: React.ElementType; roles: string[] }[] = [
@@ -29,6 +30,7 @@ const NAV_ITEMS: { label: string; href: string; icon: React.ElementType; roles: 
 export function StaffSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
   const [staff, setStaff] = useState<{ full_name: string; email: string; role: string } | null>(null)
+  const { unreadCount } = useStaffNotifications()
 
   useEffect(() => {
     const staffData = localStorage.getItem("staff")
@@ -75,6 +77,7 @@ export function StaffSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
           fetchNotifications={getStaffNotifications}
           notificationsHref="/staff/notifications"
           settingsHref="/staff/settings"
+          externalUnreadCount={unreadCount}
         />
       </SidebarFooter>
     </Sidebar>

@@ -32,6 +32,7 @@ export function NavUser({
   fetchNotifications = getNotifications,
   notificationsHref = "/notifications",
   settingsHref = "/settings",
+  externalUnreadCount,
 }: {
   user: {
     name: string
@@ -42,22 +43,28 @@ export function NavUser({
   fetchNotifications?: () => Promise<any[]>
   notificationsHref?: string
   settingsHref?: string
+  externalUnreadCount?: number
 }) {
   const { isMobile } = useSidebar()
-  const [notifCount, setNotifCount] = useState(0)
+  const [internalCount, setInternalCount] = useState(0)
   const pathname = usePathname()
 
+  // Only run the internal fetch/poll when no external count is supplied
   useEffect(() => {
+    if (externalUnreadCount !== undefined) return
+
     const refresh = () => {
       fetchNotifications()
-        .then((data: any[]) => setNotifCount(data.filter((n: any) => !n.read).length))
+        .then((data: any[]) => setInternalCount(data.filter((n: any) => !n.read).length))
         .catch(() => {})
     }
 
     refresh()
     const interval = setInterval(refresh, 30_000)
     return () => clearInterval(interval)
-  }, [fetchNotifications, pathname])
+  }, [fetchNotifications, pathname, externalUnreadCount])
+
+  const notifCount = externalUnreadCount ?? internalCount
 
   const initials = user.name
     .split(" ")
