@@ -2,7 +2,7 @@
 
 > **This repository is archived.** It was the original prototype for Basecta, built to validate demand for biodiversity compliance tooling among Irish agri-environmental consultants.
 >
-> **Active development has moved to → [Basecta/Basecta-hedgerow-grading-tool](https://github.com/Basecta/Basecta-hedgerow-grading-tool)** (Java / Spring Boot), where the platform is being rebuilt from the ground up with refined scope informed by the prototype's findings.
+> **Active development has moved to → [Basecta/Basecta-hedgerow-grading-tool](https://github.com/Basecta/Basecta-hedgerow-grading-tool)**, where the platform is being rebuilt from the ground up with refined scope informed by the prototype's findings.
 
 ## What this was
 
